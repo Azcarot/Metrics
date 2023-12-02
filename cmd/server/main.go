@@ -50,8 +50,8 @@ func PostReq(res http.ResponseWriter, req *http.Request) {
 		reqpaths := []string{"subaction", "mettype", "metname", "metvalue"}
 		url := strings.Split(req.URL.Path, "/")
 		for i := range reqpaths {
-			urlmap[reqpaths[i]] = url[i+1]
-			 if reqpaths[i] == "subaction" && url[i+1] != "update" {
+			urlmap[reqpaths[i]] = url[i]
+			 if reqpaths[i] == "subaction" && url[i] != "update" {
 			 	res.WriteHeader(http.StatusBadRequest)
 			 	return
 			 }
