@@ -64,7 +64,8 @@ func PostReq(res http.ResponseWriter, req *http.Request) {
 		switch urlmap["mettype"] {
 		case "float64":
 		  	if value, err := strconv.ParseFloat(urlmap["metvalue"], 64); err == nil {
-		  		mem.floatmem["metname"] = value
+				mem.floatmem = make(map[string]float64)
+				mem.floatmem["metname"] = value
 				  res.WriteHeader(http.StatusOK)
 				  return
 		  	} else {
@@ -72,7 +73,8 @@ func PostReq(res http.ResponseWriter, req *http.Request) {
 		  	}
 		  case "gauge":
 		  	if value, err := strconv.Atoi(urlmap["metvalue"]); err == nil {
-		  		mem.gaugemem["metname"] = gauge(value)
+                mem.gaugemem = make(map[string]gauge)
+				mem.gaugemem["metname"] = gauge(value)
 				  res.WriteHeader(http.StatusOK)
 				  return
 		  	} else {
