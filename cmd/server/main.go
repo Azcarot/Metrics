@@ -39,19 +39,19 @@ func Conveyor(h http.Handler, middlewares ...Middleware) http.Handler {
 
 func PostReq(res http.ResponseWriter, req *http.Request) {
 	method := req.Method
-	requiredcontenttype := []string{"text/plain"}
+	// requiredcontenttype := []string{"text/plain"}
 		if method == http.MethodPost {
-		ctype := req.Header.Get("Content-type") 
-		if ctype != requiredcontenttype[0] {
-		 	res.WriteHeader(http.StatusUnsupportedMediaType)
-		  	return
-		 }
+		// ctype := req.Header.Get("Content-type") 
+		// if ctype != requiredcontenttype[0] {
+		//  	res.WriteHeader(http.StatusUnsupportedMediaType)
+		//   	return
+		//  }
 		urlmap := make(map[string]string)
 		reqpaths := []string{"subaction", "mettype", "metname", "metvalue"}
 		url := strings.Split(req.URL.Path, "/")
 		for i := range reqpaths {
-			urlmap[reqpaths[i]] = url[i]
-			 if reqpaths[i] == "subaction" && url[i] != "update" {
+			urlmap[reqpaths[i]] = url[i+1]
+			 if reqpaths[i] == "subaction" && url[i+1] != "update" {
 			 	res.WriteHeader(http.StatusBadRequest)
 			 	return
 			 }
