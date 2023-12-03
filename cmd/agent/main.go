@@ -1,11 +1,10 @@
 package main
 
 import (
+	"agent/measure"
+	"agent/postmetrics"
 	"fmt"
 	"net/http"
-
-	"./measure"
-	"./postmetrics"
 )
 
 func main() {

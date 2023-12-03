@@ -1,7 +1,7 @@
 package postmetrics
 
 import (
-	"_/C_/Users/user/go/Metrics/cmd/agent/measure"
+	"agent/measure"
 	"bytes"
 	"fmt"
 	"net/http"
