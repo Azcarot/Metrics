@@ -21,6 +21,8 @@ func GetMetrics(m MemStorage, a []AllowedMetrics) MemStorage {
 		//Аллоцируем память
 		sample := make([]metrics.Sample, 1)
 		sample[0].Name = metric.Name
+		m.Gaugemem = make(map[string]Gauge)
+		m.Countermem = make(map[string]Counter)
 		// Читаем метрику
 		metrics.Read(sample)
 		// // Проверяем, поддерживается ли метрика
