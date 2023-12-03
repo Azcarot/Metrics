@@ -8,8 +8,7 @@ import (
 )
 
 func main() {
-	mets := []measure.AllowedMetrics{{
-		Name: "BuckHashSys"},
+	mets := []measure.AllowedMetrics{
 		{Name: "Frees"},
 		{Name: "GCCPUFraction"},
 		{Name: "GCSys"},
