@@ -30,10 +30,7 @@ func PostMetrics(pth string) *http.Response {
 	}
 	resp.Header.Add("Content-Type", "text.plain")
 	client := &http.Client{}
-	res, err := client.Do(resp)
-	if err != nil {
-		panic(err)
-	}
+	res, _ := client.Do(resp)
 	defer res.Body.Close()
 	return res
 }
