@@ -12,7 +12,7 @@ func main() {
 	var metric measure.MemStorage
 	metric = measure.GetMetrics(metric)
 	urls := postmetrics.Makepath(metric)
-	var resp *http.Response
+	var resp *http.Request
 	for _, url := range urls {
 		resp = postmetrics.PostMetrics(url)
 	}

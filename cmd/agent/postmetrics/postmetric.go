@@ -22,10 +22,9 @@ func Makepath(m measure.MemStorage) []string {
 	return path
 }
 
-func PostMetrics(pth string) *http.Response {
+func PostMetrics(pth string) *http.Request {
 	data := []byte(pth)
-	r := bytes.NewReader(data)
-	resp, err := http.Post(pth, "text/plain", r)
+	resp, err := http.NewRequest("POST", pth, bytes.NewBuffer(data))
 	if err != nil {
 		panic(fmt.Sprintf("cannot post %s ", data))
 	}
