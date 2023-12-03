@@ -24,10 +24,12 @@ func GetMetrics(m MemStorage, a []AllowedMetrics) MemStorage {
 		// Читаем метрику
 		metrics.Read(sample)
 		// // Проверяем, поддерживается ли метрика
-		// if sample[0].Value.Kind() == metrics.KindBad {
+		var newmem Gauge
+		if sample[0].Value.Kind() != metrics.KindBad && sample[0].Value.Kind() == metrics.KindFloat64 {
+			newmem = Gauge(sample[0].Value.Float64())
+		}
 		// 	panic(fmt.Sprintf("metric %q no longer supported", metric.Name))
-		// }
-		newmem := Gauge(sample[0].Value.Float64())
+
 		m.Gaugemem[metric.Name] = newmem
 		m.Countermem[metric.Name]++
 
