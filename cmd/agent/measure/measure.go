@@ -1,7 +1,6 @@
 package measure
 
 import (
-	"fmt"
 	"runtime/metrics"
 )
 
@@ -24,10 +23,10 @@ func GetMetrics(m MemStorage, a []AllowedMetrics) MemStorage {
 		sample[0].Name = metric.Name
 		// Читаем метрику
 		metrics.Read(sample)
-		// Проверяем, поддерживается ли метрика
-		if sample[0].Value.Kind() == metrics.KindBad {
-			panic(fmt.Sprintf("metric %q no longer supported", metric.Name))
-		}
+		// // Проверяем, поддерживается ли метрика
+		// if sample[0].Value.Kind() == metrics.KindBad {
+		// 	panic(fmt.Sprintf("metric %q no longer supported", metric.Name))
+		// }
 		newmem := Gauge(sample[0].Value.Uint64())
 		m.Gaugemem[metric.Name] = newmem
 		m.Countermem[metric.Name]++
