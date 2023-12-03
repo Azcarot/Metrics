@@ -10,13 +10,17 @@ import (
 
 func Makepath(m measure.MemStorage) []string {
 	var path []string
+	pathscount := 0
 	for name, value := range m.Gaugemem {
-		path = append(path, "http://localhost:8080/update")
-		path = append(path, "/gauge/"+name+"/"+strconv.FormatFloat(float64(value), 'g', -1, 64))
+
+		path[pathscount] = "http://localhost:8080/update"
+		path[pathscount] += "/gauge/" + name + "/" + strconv.FormatFloat(float64(value), 'g', -1, 64)
+		pathscount++
 	}
 	for name, value := range m.Countermem {
-		path = append(path, "http://localhost:8080/update")
-		path = append(path, "/counter/"+name+"/"+strconv.Itoa(int(value)))
+		path[pathscount] = "http://localhost:8080/update"
+		path[pathscount] = "/counter/" + name + "/" + strconv.Itoa(int(value))
+		pathscount++
 	}
 	return path
 }
