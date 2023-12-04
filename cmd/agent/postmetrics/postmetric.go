@@ -31,6 +31,6 @@ func PostMetrics(pth string) *http.Response {
 	resp.Header.Add("Content-Type", "text.plain")
 	client := &http.Client{}
 	res, _ := client.Do(resp)
-	defer res.Body.Close()
+	// defer res.Body.Close()
 	return res
 }
