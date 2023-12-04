@@ -12,23 +12,6 @@ type MemInteractions interface {
 	PostMetrics() bool
 }
 
-func GetStoredMetrics(m measure.MemStorage) measure.MemStorage {
-	return m
-}
-
-func PostMetrics(m measure.MemStorage) bool {
-	return true
-}
-
-type Middleware func(http.Handler) http.Handler
-
-func Conveyor(h http.Handler, middlewares ...Middleware) http.Handler {
-	for _, middleware := range middlewares {
-		h = middleware(h)
-	}
-	return h
-}
-
 func PostReq(res http.ResponseWriter, req *http.Request) {
 	method := req.Method
 	// requiredcontenttype := []string{"text/plain"}
