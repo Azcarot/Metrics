@@ -1,30 +1,22 @@
 package main
 
 import (
+	"agent/measure"
 	"net/http"
 	"strconv"
 	"strings"
 )
 
-type gauge int
-type counter int
-type MemStorage struct {
-	floatmem   map[string]float64
-	gaugemem   map[string]gauge
-	countermem map[string][]counter
-	int64mem   map[string][]int64
-}
-
 type MemInteractions interface {
-	GetStoredMetrics() MemStorage
+	GetStoredMetrics() measure.MemStorage
 	PostMetrics() bool
 }
 
-func GetStoredMetrics(m MemStorage) MemStorage {
+func GetStoredMetrics(m measure.MemStorage) measure.MemStorage {
 	return m
 }
 
-func PostMetrics(m MemStorage) bool {
+func PostMetrics(m measure.MemStorage) bool {
 	return true
 }
 
@@ -60,21 +52,13 @@ func PostReq(res http.ResponseWriter, req *http.Request) {
 				return
 			}
 		}
-		var mem MemStorage
+		var mem measure.MemStorage
 		switch urlmap["mettype"] {
-		case "float64":
-			if value, err := strconv.ParseFloat(urlmap["metvalue"], 64); err == nil {
-				mem.floatmem = make(map[string]float64)
-				mem.floatmem["metname"] = value
-				res.WriteHeader(http.StatusOK)
-				return
-			} else {
-				res.WriteHeader(http.StatusBadRequest)
-			}
+
 		case "gauge":
 			if value, err := strconv.Atoi(urlmap["metvalue"]); err == nil {
-				mem.gaugemem = make(map[string]gauge)
-				mem.gaugemem["metname"] = gauge(value)
+				mem.Gaugemem = make(map[string]measure.Gauge)
+				mem.Gaugemem["metname"] = measure.Gauge(value)
 				res.WriteHeader(http.StatusOK)
 				return
 			} else {
@@ -82,22 +66,13 @@ func PostReq(res http.ResponseWriter, req *http.Request) {
 			}
 		case "counter":
 			if value, err := strconv.Atoi(urlmap["metvalue"]); err == nil {
-				mem.countermem = make(map[string][]counter, 1)
-				mem.countermem["metname"] = append(mem.countermem["metname"], counter(value))
+				mem.Countermem = make(map[string]measure.Counter, 1)
+				mem.Countermem["metname"] += measure.Counter(value)
 				res.WriteHeader(http.StatusOK)
 				return
 			} else {
 				res.WriteHeader(http.StatusBadRequest)
 				return
-			}
-		case "int64":
-			if value, err := strconv.ParseInt(urlmap["metvalue"], 0, 64); err == nil {
-				mem.int64mem = make(map[string][]int64, 1)
-				mem.int64mem["metname"] = append(mem.int64mem["metname"], value)
-				res.WriteHeader(http.StatusOK)
-				return
-			} else {
-				res.WriteHeader(http.StatusBadRequest)
 			}
 		default:
 			res.WriteHeader(http.StatusBadRequest)
