@@ -1,10 +1,11 @@
 package main
 
 import (
-	"agent/measure"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/Azcarot/Metrics/cmd/agent/measure"
 )
 
 type MemInteractions interface {

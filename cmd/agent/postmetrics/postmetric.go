@@ -1,11 +1,12 @@
 package postmetrics
 
 import (
-	"agent/measure"
 	"bytes"
 	"fmt"
 	"net/http"
 	"strconv"
+
+	"github.com/Azcarot/Metrics/cmd/agent/measure"
 )
 
 func Makepath(m measure.MemStorage) []string {

@@ -1,11 +1,10 @@
 package main
 
 import (
-	"agent/measure"
-	"agent/postmetrics"
-	"fmt"
-	"net/http"
 	"time"
+
+	"github.com/Azcarot/Metrics/cmd/agent/measure"
+	"github.com/Azcarot/Metrics/cmd/agent/postmetrics"
 )
 
 func main() {
@@ -18,11 +17,10 @@ func main() {
 		counter += 2
 		if counter%10 == 0 {
 			urls := postmetrics.Makepath(metric)
-			var resp *http.Response
 			for _, url := range urls {
-				resp = postmetrics.PostMetrics(url)
+				postmetrics.PostMetrics(url)
 			}
-			fmt.Sprintf("metric no longer supported", resp)
+
 		}
 	}
 }

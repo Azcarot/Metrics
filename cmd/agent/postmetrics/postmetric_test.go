@@ -1,9 +1,10 @@
 package postmetrics
 
 import (
-	"agent/measure"
 	"reflect"
 	"testing"
+
+	"github.com/Azcarot/Metrics/cmd/agent/measure"
 )
 
 func TestMakepath(t *testing.T) {
