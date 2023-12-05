@@ -43,7 +43,7 @@ func HandlePostMetrics(res http.ResponseWriter, req *http.Request) {
 			return
 		}
 	}
-	http.Error(res, "unknown metric: "+metric, http.StatusNotFound)
+	res.WriteHeader(http.StatusBadRequest)
 }
 
 func HandleGetMetrics(res http.ResponseWriter, req *http.Request) {
