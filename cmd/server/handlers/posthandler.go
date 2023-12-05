@@ -1,4 +1,4 @@
-package postmetrics
+package handlers
 
 import (
 	"bytes"
@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/Azcarot/Metrics/cmd/agent/measure"
+	"github.com/Azcarot/Metrics/cmd/types"
 )
 
-func Makepath(m measure.MemStorage) []string {
+func Makepath(m types.MemStorage) []string {
 	var path []string
 	pathscount := 0
 	for name, value := range m.Gaugemem {
@@ -29,9 +29,8 @@ func PostMetrics(pth string) *http.Response {
 	if err != nil {
 		panic(fmt.Sprintf("cannot post %s ", data))
 	}
-	resp.Header.Add("Content-Type", "text.plain")
+	resp.Header.Add("Content-Type", "text/plain")
 	client := &http.Client{}
 	res, _ := client.Do(resp)
-	// defer res.Body.Close()
 	return res
 }

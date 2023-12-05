@@ -2,75 +2,19 @@ package main
 
 import (
 	"net/http"
-	"strconv"
-	"strings"
 
-	"github.com/Azcarot/Metrics/cmd/agent/measure"
+	"github.com/Azcarot/Metrics/cmd/server/handlers"
+	"github.com/go-chi/chi/v5"
 )
 
-type MemInteractions interface {
-	GetStoredMetrics() measure.MemStorage
-	PostMetrics() bool
-}
-
-func PostReq(res http.ResponseWriter, req *http.Request) {
-	method := req.Method
-	// requiredcontenttype := []string{"text/plain"}
-	if method == http.MethodPost {
-		// ctype := req.Header.Get("Content-type")
-		// if ctype != requiredcontenttype[0] {
-		//  	res.WriteHeader(http.StatusUnsupportedMediaType)
-		//   	return
-		//  }
-		urlmap := make(map[string]string)
-		reqpaths := []string{"subaction", "mettype", "metname", "metvalue"}
-		url := strings.Split(req.URL.Path, "/")
-		for i := range reqpaths {
-			urlmap[reqpaths[i]] = url[i+1]
-			if reqpaths[i] == "subaction" && url[i+1] != "update" {
-				res.WriteHeader(http.StatusBadRequest)
-				return
-			}
-			if len(url[i+1]) == 0 && reqpaths[i] == "metname" {
-				res.WriteHeader(http.StatusNotFound)
-				return
-			}
-		}
-		var mem measure.MemStorage
-		switch urlmap["mettype"] {
-
-		case "gauge":
-			if value, err := strconv.Atoi(urlmap["metvalue"]); err == nil {
-				mem.Gaugemem = make(map[string]measure.Gauge)
-				mem.Gaugemem["metname"] = measure.Gauge(value)
-				res.WriteHeader(http.StatusOK)
-				return
-			} else {
-				res.WriteHeader(http.StatusBadRequest)
-			}
-		case "counter":
-			if value, err := strconv.Atoi(urlmap["metvalue"]); err == nil {
-				mem.Countermem = make(map[string]measure.Counter, 1)
-				mem.Countermem["metname"] += measure.Counter(value)
-				res.WriteHeader(http.StatusOK)
-				return
-			} else {
-				res.WriteHeader(http.StatusBadRequest)
-				return
-			}
-		default:
-			res.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-	} else {
-		res.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-}
-
 func run() error {
-	return http.ListenAndServe(`:8080`, http.HandlerFunc(PostReq))
+	r := chi.NewRouter()
+	r.Post("/update", http.HandlerFunc(handlers.HandlePostMetrics))
+	r.Route("/", func(r chi.Router) {
+		r.Get("/", http.HandlerFunc(handlers.HandleGetAllMetrics))
+		r.Get("/value/{name}/{type}", http.HandlerFunc(handlers.HandleGetMetrics))
+	})
+	return http.ListenAndServe(":8080", r)
 }
 
 func main() {

@@ -5,16 +5,18 @@ package measure
 import (
 	"reflect"
 	"testing"
+
+	"github.com/Azcarot/Metrics/cmd/types"
 )
 
 func TestGetMetrics(t *testing.T) {
 	type args struct {
-		m MemStorage
+		m types.MemStorage
 	}
 	tests := []struct {
 		name string
 		args args
-		want Counter
+		want types.Counter
 	}{{
 		name: "testcounter",
 		args: args{},
@@ -22,7 +24,7 @@ func TestGetMetrics(t *testing.T) {
 	}}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := GetMetrics(tt.args.m); !reflect.DeepEqual(got.Countermem["PollCount"], tt.want) {
+			if got := CollectMetrics(tt.args.m); !reflect.DeepEqual(got.Countermem["PollCount"], tt.want) {
 				t.Errorf("GetMetrics() = %v, want %v", got.Countermem["PollCount"], tt.want)
 			}
 		})

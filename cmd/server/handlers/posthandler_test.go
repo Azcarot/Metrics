@@ -1,15 +1,15 @@
-package postmetrics
+package handlers
 
 import (
 	"reflect"
 	"testing"
 
-	"github.com/Azcarot/Metrics/cmd/agent/measure"
+	"github.com/Azcarot/Metrics/cmd/types"
 )
 
 func TestMakepath(t *testing.T) {
 	type args struct {
-		m measure.MemStorage
+		m types.MemStorage
 	}
 	tests := []struct {
 		name string
@@ -17,7 +17,7 @@ func TestMakepath(t *testing.T) {
 		want string
 	}{
 		{name: "тест формирования url",
-			args: args{measure.MemStorage{Countermem: map[string]measure.Counter{"PollCounter": 2}}},
+			args: args{types.MemStorage{Countermem: map[string]types.Counter{"PollCounter": 2}}},
 			want: "http://localhost:8080/update/counter/PollCounter/2"},
 	}
 	for _, tt := range tests {

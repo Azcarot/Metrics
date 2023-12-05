@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/Azcarot/Metrics/cmd/server/handlers"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -37,7 +38,7 @@ func TestPostReq(t *testing.T) {
 		}}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			PostReq(&tt.responder, tt.request)
+			handlers.HandlePostMetrics(&tt.responder, tt.request)
 			res := tt.responder.Result()
 			assert.Equal(t, tt.want.code, res.StatusCode)
 			assert.Equal(t, tt.want.response, res.Status)
