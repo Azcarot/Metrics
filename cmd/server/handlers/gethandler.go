@@ -15,12 +15,10 @@ func HandlePostMetrics(res http.ResponseWriter, req *http.Request) {
 	metric := strings.ToLower(chi.URLParam(req, "type"))
 	for _, c := range types.MetricNameTypes {
 		if (strings.ToLower(c) == metric) && len(chi.URLParam(req, "name")) != 0 {
-			var mem types.MemStorage
 			switch strings.ToLower(chi.URLParam(req, "type")) {
 			case "gauge":
 				if value, err := strconv.Atoi(chi.URLParam(req, "value")); err == nil {
-					mem.Gaugemem = make(map[string]types.Gauge)
-					mem.Gaugemem[chi.URLParam(req, "name")] = types.Gauge(value)
+					types.Storage.Gaugemem[chi.URLParam(req, "name")] = types.Gauge(value)
 					res.WriteHeader(http.StatusOK)
 					return
 				} else {
@@ -28,8 +26,7 @@ func HandlePostMetrics(res http.ResponseWriter, req *http.Request) {
 				}
 			case "counter":
 				if value, err := strconv.Atoi(chi.URLParam(req, "value")); err == nil {
-					mem.Countermem = make(map[string]types.Counter)
-					mem.Countermem[chi.URLParam(req, "name")] = types.Counter(value)
+					types.Storage.Countermem[chi.URLParam(req, "name")] = types.Counter(value)
 					res.WriteHeader(http.StatusOK)
 					return
 				} else {
@@ -49,7 +46,13 @@ func HandleGetMetrics(res http.ResponseWriter, req *http.Request) {
 	for _, c := range types.MetricNameTypes {
 		if strings.ToLower(c) == metric {
 			res.Header().Add("Content-Type", "text/plain")
-			io.WriteString(res, strconv.FormatFloat(rand.Float64(), 'g', -1, 64))
+			switch chi.URLParam(req, "type") {
+			case "gauge":
+				io.WriteString(res, strconv.FormatFloat(float64(types.Storage.Gaugemem[chi.URLParam(req, "name")]), 'g', -1, 64))
+			case "counter":
+				io.WriteString(res, strconv.Itoa(int(types.Storage.Countermem[chi.URLParam(req, "name")])))
+			}
+
 			return
 		}
 	}
