@@ -39,8 +39,6 @@ func HandlePostMetrics(res http.ResponseWriter, req *http.Request) {
 			default:
 				res.WriteHeader(http.StatusBadRequest)
 			}
-			io.WriteString(res, strconv.FormatFloat(rand.Float64(), 'g', -1, 64))
-			return
 		}
 	}
 	res.WriteHeader(http.StatusBadRequest)
