@@ -32,12 +32,12 @@ type StorageHandler struct {
 
 func (st *StorageHandler) HandleGetMetrics(res http.ResponseWriter, req *http.Request) {
 	metric := strings.ToLower(chi.URLParam(req, "name") + ` ` + chi.URLParam(req, "type"))
-	result, err := st.Storage.GetStoredMetrics(chi.URLParam(req, "name"), chi.URLParam(req, "type"))
+	result, err := st.Storage.GetStoredMetrics(chi.URLParam(req, "type"), chi.URLParam(req, "name"))
 	res.Header().Add("Content-Type", "text/plain")
 	io.WriteString(res, result)
 
 	if err != nil {
-		http.Error(res, "unknown metric: "+metric, http.StatusNotFound)
+		res.WriteHeader(http.StatusNotFound)
 	}
 }
 

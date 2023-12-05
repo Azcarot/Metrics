@@ -53,6 +53,7 @@ func TestHandlePostMetrics(t *testing.T) {
 	}
 	for _, v := range testTable {
 		resp, get := testRequest(t, ts, "GET", v.url)
+		ts.Close()
 		assert.Equal(t, v.status, resp.StatusCode)
 		assert.Equal(t, v.want, get)
 	}
