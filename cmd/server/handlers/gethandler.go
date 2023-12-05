@@ -57,11 +57,11 @@ func HandleGetMetrics(res http.ResponseWriter, req *http.Request) {
 	}
 	http.Error(res, "unknown metric: "+metric, http.StatusNotFound)
 }
+
 func HandleGetAllMetrics(res http.ResponseWriter, req *http.Request) {
-	for i, _ := range types.MetricNameTypes {
+	for i := range types.MetricNameTypes {
 		io.WriteString(res, strings.ToLower(i)+` `+strconv.FormatFloat(rand.Float64(), 'g', -1, 64))
 
 	}
 	res.Header().Add("Content-Type", "text/html")
-	return
 }
