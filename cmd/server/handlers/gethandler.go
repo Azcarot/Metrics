@@ -3,70 +3,46 @@ package handlers
 import (
 	"io"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/Azcarot/Metrics/cmd/types"
 	"github.com/go-chi/chi/v5"
 )
 
-func HandlePostMetrics(res http.ResponseWriter, req *http.Request) {
-	metric := strings.ToLower(chi.URLParam(req, "type"))
-	for _, c := range types.MetricNameTypes {
-		if (strings.ToLower(c) == metric) && len(chi.URLParam(req, "name")) != 0 {
-			switch strings.ToLower(chi.URLParam(req, "type")) {
-			case "gauge":
-				if value, err := strconv.Atoi(chi.URLParam(req, "value")); err == nil {
-					types.Storage.Gaugemem[chi.URLParam(req, "name")] = types.Gauge(value)
-					res.WriteHeader(http.StatusOK)
-					return
-				} else {
-					res.WriteHeader(http.StatusBadRequest)
-				}
-			case "counter":
-				if value, err := strconv.Atoi(chi.URLParam(req, "value")); err == nil {
-					types.Storage.Countermem[chi.URLParam(req, "name")] = types.Counter(value)
-					res.WriteHeader(http.StatusOK)
-					return
-				} else {
-					res.WriteHeader(http.StatusBadRequest)
-				}
-
-			default:
-				res.WriteHeader(http.StatusBadRequest)
+func (st *StorageHandler) HandlePostMetrics(res http.ResponseWriter, req *http.Request) {
+	if len(chi.URLParam(req, "name")) != 0 && len(chi.URLParam(req, "value")) != 0 && len(chi.URLParam(req, "type")) != 0 {
+		if strings.ToLower(chi.URLParam(req, "type")) == "gauge" || strings.ToLower(chi.URLParam(req, "type")) == "counter" {
+			err := st.Storage.StoreMetrics(chi.URLParam(req, "name"), strings.ToLower(chi.URLParam(req, "type")), chi.URLParam(req, "value"))
+			if err == nil {
+				res.WriteHeader(http.StatusOK)
 				return
 			}
 		}
+		res.WriteHeader(http.StatusBadRequest)
+		return
 	}
+
 	res.WriteHeader(http.StatusBadRequest)
+	return
 }
 
-func HandleGetMetrics(res http.ResponseWriter, req *http.Request) {
+type StorageHandler struct {
+	Storage types.MemInteractions
+}
+
+func (st *StorageHandler) HandleGetMetrics(res http.ResponseWriter, req *http.Request) {
 	metric := strings.ToLower(chi.URLParam(req, "name") + ` ` + chi.URLParam(req, "type"))
-	for _, c := range types.MetricNameTypes {
-		if strings.ToLower(c) == metric {
-			res.Header().Add("Content-Type", "text/plain")
-			switch chi.URLParam(req, "type") {
-			case "gauge":
-				io.WriteString(res, strconv.FormatFloat(float64(types.Storage.Gaugemem[chi.URLParam(req, "name")]), 'g', -1, 64))
-			case "counter":
-				io.WriteString(res, strconv.Itoa(int(types.Storage.Countermem[chi.URLParam(req, "name")])))
-			}
+	result, err := st.Storage.GetStoredMetrics(chi.URLParam(req, "name"), chi.URLParam(req, "type"))
+	res.Header().Add("Content-Type", "text/plain")
+	io.WriteString(res, result)
 
-			return
-		}
+	if err != nil {
+		http.Error(res, "unknown metric: "+metric, http.StatusNotFound)
 	}
-	http.Error(res, "unknown metric: "+metric, http.StatusNotFound)
 }
 
-func HandleGetAllMetrics(res http.ResponseWriter, req *http.Request) {
-	for i, c := range types.Storage.Countermem {
-		io.WriteString(res, strings.ToLower(i)+` `+strconv.Itoa(int(c)))
-
-	}
-	for i, c := range types.Storage.Gaugemem {
-		io.WriteString(res, strings.ToLower(i)+` `+strconv.Itoa(int(c)))
-
-	}
+func (st *StorageHandler) HandleGetAllMetrics(res http.ResponseWriter, req *http.Request) {
+	result := st.Storage.GetAllMetrics()
+	io.WriteString(res, result)
 	res.Header().Add("Content-Type", "text/html")
 }

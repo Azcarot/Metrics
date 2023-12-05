@@ -7,14 +7,19 @@ import (
 
 	"io"
 
+	"github.com/Azcarot/Metrics/cmd/types"
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func MetricRouter() chi.Router {
+	storagehandler := &StorageHandler{
+		Storage: &types.MemStorage{
+			Gaugemem: make(map[string]types.Gauge), Countermem: make(map[string]types.Counter)},
+	}
 	r := chi.NewRouter()
-	r.Get("/update/{type}/{name}/{value}", HandlePostMetrics)
+	r.Get("/update/{type}/{name}/{value}", storagehandler.HandlePostMetrics)
 	return r
 }
 
