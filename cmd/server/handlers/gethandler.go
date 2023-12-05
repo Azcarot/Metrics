@@ -12,9 +12,9 @@ import (
 )
 
 func HandlePostMetrics(res http.ResponseWriter, req *http.Request) {
-	metric := strings.ToLower(chi.URLParam(req, "name") + ` ` + chi.URLParam(req, "type"))
-	for i, c := range types.MetricNameTypes {
-		if strings.ToLower(i+` `+c) == metric {
+	metric := strings.ToLower(chi.URLParam(req, "type"))
+	for _, c := range types.MetricNameTypes {
+		if (strings.ToLower(c) == metric) && len(chi.URLParam(req, "name")) != 0 {
 			var mem types.MemStorage
 			switch strings.ToLower(chi.URLParam(req, "type")) {
 			case "gauge":
