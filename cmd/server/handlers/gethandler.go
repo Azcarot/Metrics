@@ -21,9 +21,6 @@ func (st *StorageHandler) HandlePostMetrics(res http.ResponseWriter, req *http.R
 		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
-	res.WriteHeader(http.StatusBadRequest)
-	return
 }
 
 type StorageHandler struct {
