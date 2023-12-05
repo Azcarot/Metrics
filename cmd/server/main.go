@@ -9,9 +9,10 @@ import (
 
 func run() error {
 	r := chi.NewRouter()
-	r.Post("/update", http.HandlerFunc(handlers.HandlePostMetrics))
+
 	r.Route("/", func(r chi.Router) {
 		r.Get("/", http.HandlerFunc(handlers.HandleGetAllMetrics))
+		r.Post("/update/{type}/{name}/{value}", http.HandlerFunc(handlers.HandlePostMetrics))
 		r.Get("/value/{name}/{type}", http.HandlerFunc(handlers.HandleGetMetrics))
 	})
 	return http.ListenAndServe(":8080", r)
