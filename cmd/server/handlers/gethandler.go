@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"io"
-	"math/rand"
 	"net/http"
 	"strconv"
 	"strings"
@@ -35,6 +34,7 @@ func HandlePostMetrics(res http.ResponseWriter, req *http.Request) {
 
 			default:
 				res.WriteHeader(http.StatusBadRequest)
+				return
 			}
 		}
 	}
@@ -60,8 +60,12 @@ func HandleGetMetrics(res http.ResponseWriter, req *http.Request) {
 }
 
 func HandleGetAllMetrics(res http.ResponseWriter, req *http.Request) {
-	for i := range types.MetricNameTypes {
-		io.WriteString(res, strings.ToLower(i)+` `+strconv.FormatFloat(rand.Float64(), 'g', -1, 64))
+	for i, c := range types.Storage.Countermem {
+		io.WriteString(res, strings.ToLower(i)+` `+strconv.Itoa(int(c)))
+
+	}
+	for i, c := range types.Storage.Gaugemem {
+		io.WriteString(res, strings.ToLower(i)+` `+strconv.Itoa(int(c)))
 
 	}
 	res.Header().Add("Content-Type", "text/html")
