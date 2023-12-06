@@ -50,14 +50,29 @@ func (m *MemStorage) GetAllMetrics() string {
 }
 
 func (m *MemStorage) GetStoredMetrics(n string, t string) (string, error) {
-
+	var result string
+	var err error
 	switch t {
 	case "gauge":
-		return strconv.FormatFloat(float64(m.Gaugemem[n]), 'g', -1, 64), nil
+		val, ok := m.Gaugemem[n]
+
+		if ok {
+			result = strconv.FormatFloat(float64(val), 'g', -1, 64)
+		} else {
+			err = errors.New("no metric stored")
+		}
+
 	case "counter":
-		return strconv.Itoa(int(m.Countermem[n])), nil
+		val, ok := m.Countermem[n]
+		if ok {
+			result = strconv.Itoa(int(val))
+		} else {
+			err = errors.New("no metric stored")
+		}
+	default:
+		return "", errors.New("wrong type")
 	}
-	return "", errors.New("wrong type")
+	return result, err
 }
 
 var MetricNameTypes = map[string]string{
