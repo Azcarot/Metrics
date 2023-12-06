@@ -29,7 +29,7 @@ func (m *MemStorage) StoreMetrics(n string, t string, v string) error {
 		return err
 	case "counter":
 		value, err := strconv.Atoi(v)
-		m.Countermem[n] = Counter(value)
+		m.Countermem[n] += Counter(value)
 		return err
 	}
 	return nil

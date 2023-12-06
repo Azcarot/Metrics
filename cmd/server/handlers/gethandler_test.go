@@ -54,5 +54,6 @@ func TestHandlePostMetrics(t *testing.T) {
 		resp, get := testRequest(t, ts, "GET", v.url)
 		assert.Equal(t, v.status, resp.StatusCode)
 		assert.Equal(t, v.want, get)
+		defer resp.Body.Close()
 	}
 }

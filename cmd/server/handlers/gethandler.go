@@ -30,10 +30,10 @@ type StorageHandler struct {
 func (st *StorageHandler) HandleGetMetrics(res http.ResponseWriter, req *http.Request) {
 	result, err := st.Storage.GetStoredMetrics(chi.URLParam(req, "type"), chi.URLParam(req, "name"))
 	res.Header().Add("Content-Type", "text/plain")
-	io.WriteString(res, result)
-
 	if err != nil {
 		res.WriteHeader(http.StatusNotFound)
+	} else {
+		io.WriteString(res, result)
 	}
 }
 
