@@ -52,7 +52,7 @@ func setValues() {
 	if envcfg.Address != "" {
 		agentData.addr = envcfg.Address
 	}
-	if envcfg.PollInt > 0 {
+	if int(envcfg.PollInt) > 0 {
 		agentData.pollint = envcfg.PollInt
 	}
 	if envcfg.RepInt > 0 {

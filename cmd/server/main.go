@@ -14,7 +14,7 @@ import (
 var flagAddr string
 
 type serverENV struct {
-	address string `env:"ADDRESS"`
+	Address string `env:"ADDRESS"`
 }
 
 func parseFlags() {
@@ -28,8 +28,9 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	if envcfg.address != "" {
-		flagAddr = envcfg.address
+	println(envcfg.Address)
+	if envcfg.Address != "" {
+		flagAddr = envcfg.Address
 	}
 	storagehandler := &handlers.StorageHandler{
 		Storage: &types.MemStorage{
