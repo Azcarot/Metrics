@@ -25,8 +25,8 @@ var agentFlags struct {
 
 type agentENV struct {
 	Address string        `env:"ADDRESS"`
-	PollInt time.Duration `env: "POLL_INTERVAL"`
-	RepInt  int           `env: "REPORT_INTERVAL"`
+	PollInt time.Duration `env:"POLL_INTERVAL"`
+	RepInt  int           `env:"REPORT_INTERVAL"`
 }
 
 func parseFlags() {
