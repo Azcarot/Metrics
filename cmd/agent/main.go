@@ -8,7 +8,7 @@ import (
 	"github.com/Azcarot/Metrics/cmd/agent/measure"
 	"github.com/Azcarot/Metrics/cmd/server/handlers"
 	"github.com/Azcarot/Metrics/cmd/types"
-	"github.com/caarlos0/env/v6"
+	"github.com/caarlos0/env/v10"
 )
 
 var agentData struct {
@@ -23,16 +23,16 @@ var agentFlags struct {
 	flagAddr       string
 }
 
-type agentENV struct {
-	Address string        `env:"ADDRESS"`
-	PollInt time.Duration `env:"POLL_INTERVAL"`
-	RepInt  int           `env:"REPORT_INTERVAL"`
+type AgentENV struct {
+	Address string `env:"ADDRESS"`
+	PollInt int    `env:"POLL_INTERVAL"`
+	RepInt  int    `env:"REPORT_INTERVAL"`
 }
 
 func parseFlags() {
 	flag.StringVar(&agentFlags.flagAddr, "a", "localhost:8080", "address and port to run server")
 	flag.IntVar(&agentFlags.pollinterval, "p", 2, "PollInterval")
-	flag.IntVar(&agentFlags.reportInterval, "r", 10, "PollInterval")
+	flag.IntVar(&agentFlags.reportInterval, "r", 10, "ReportInterval")
 	flag.Parse()
 }
 
@@ -41,7 +41,7 @@ func parseFlags() {
 // Если нет ни переменной окружения, ни флага, то используется значение по умолчанию.
 func setValues() {
 	parseFlags()
-	var envcfg agentENV
+	envcfg := AgentENV{}
 	err := env.Parse(&envcfg)
 	if err != nil {
 		log.Fatal(err)
@@ -52,8 +52,9 @@ func setValues() {
 	if envcfg.Address != "" {
 		agentData.addr = envcfg.Address
 	}
+
 	if int(envcfg.PollInt) > 0 {
-		agentData.pollint = envcfg.PollInt
+		agentData.pollint = time.Duration(envcfg.PollInt)
 	}
 	if envcfg.RepInt > 0 {
 		agentData.reportint = envcfg.RepInt

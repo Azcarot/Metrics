@@ -28,7 +28,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	println(envcfg.Address)
 	if envcfg.Address != "" {
 		flagAddr = envcfg.Address
 	}
