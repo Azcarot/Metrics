@@ -9,15 +9,15 @@ import (
 	"github.com/Azcarot/Metrics/cmd/types"
 )
 
-func Makepath(m types.MemStorage) []string {
+func Makepath(m types.MemStorage, a string) []string {
 	var path []string
 	pathscount := 0
 	for name, value := range m.Gaugemem {
-		path = append(path, "http://localhost:8080/update/gauge/"+name+"/"+strconv.FormatFloat(float64(value), 'g', -1, 64))
+		path = append(path, "http://"+a+"/update/gauge/"+name+"/"+strconv.FormatFloat(float64(value), 'g', -1, 64))
 		pathscount++
 	}
 	for name, value := range m.Countermem {
-		path = append(path, "http://localhost:8080/update/counter/"+name+"/"+strconv.Itoa(int(value)))
+		path = append(path, "http://"+a+"/update/counter/"+name+"/"+strconv.Itoa(int(value)))
 		pathscount++
 	}
 	return path
