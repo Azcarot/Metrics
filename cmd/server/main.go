@@ -2,14 +2,20 @@ package main
 
 import (
 	"flag"
+	"log"
 	"net/http"
 
 	"github.com/Azcarot/Metrics/cmd/server/handlers"
 	"github.com/Azcarot/Metrics/cmd/types"
+	"github.com/caarlos0/env/v6"
 	"github.com/go-chi/chi/v5"
 )
 
 var flagAddr string
+
+type serverENV struct {
+	address string `env:"ADDRESS"`
+}
 
 func parseFlags() {
 	flag.StringVar(&flagAddr, "a", "localhost:8080", "address and port to run server")
@@ -17,6 +23,14 @@ func parseFlags() {
 }
 func main() {
 	parseFlags()
+	var envcfg serverENV
+	err := env.Parse(&envcfg)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if envcfg.address != "" {
+		flagAddr = envcfg.address
+	}
 	storagehandler := &handlers.StorageHandler{
 		Storage: &types.MemStorage{
 			Gaugemem: make(map[string]types.Gauge), Countermem: make(map[string]types.Counter)},
