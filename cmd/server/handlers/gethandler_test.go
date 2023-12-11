@@ -7,21 +7,9 @@ import (
 
 	"io"
 
-	"github.com/Azcarot/Metrics/cmd/types"
-	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-func MetricRouter() chi.Router {
-	storagehandler := &StorageHandler{
-		Storage: &types.MemStorage{
-			Gaugemem: make(map[string]types.Gauge), Countermem: make(map[string]types.Counter)},
-	}
-	r := chi.NewRouter()
-	r.Get("/update/{type}/{name}/{value}", storagehandler.HandlePostMetrics)
-	return r
-}
 
 func testRequest(t *testing.T, ts *httptest.Server, method,
 	path string) (*http.Response, string) {
@@ -39,7 +27,8 @@ func testRequest(t *testing.T, ts *httptest.Server, method,
 }
 
 func TestHandlePostMetrics(t *testing.T) {
-	ts := httptest.NewServer(MetricRouter())
+	ts := httptest.NewServer(MakeRouter())
+	defer ts.Close()
 	var testTable = []struct {
 		url    string
 		want   string
@@ -51,7 +40,7 @@ func TestHandlePostMetrics(t *testing.T) {
 		{"/update/fail/fail/3", "", http.StatusBadRequest},
 	}
 	for _, v := range testTable {
-		resp, get := testRequest(t, ts, "GET", v.url)
+		resp, get := testRequest(t, ts, "POST", v.url)
 		assert.Equal(t, v.status, resp.StatusCode)
 		assert.Equal(t, v.want, get)
 		defer resp.Body.Close()

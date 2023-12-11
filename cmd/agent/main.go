@@ -64,17 +64,20 @@ func setValues() {
 func main() {
 	setValues()
 	var metric types.MemStorage
-	counter := 0
+	sleeptime := time.Duration(agentData.pollint) * time.Second
+	reporttime := time.Duration(agentData.reportint) * time.Second
+	reporttimer := time.After(reporttime)
 	for {
-		metric = measure.CollectMetrics(metric)
-		time.Sleep(time.Duration(agentData.pollint) * time.Second)
-		counter += 2
-		if counter%agentData.reportint == 0 {
+		select {
+		case <-reporttimer:
 			urls := handlers.Makepath(metric, agentData.addr)
 			for _, url := range urls {
 				handlers.PostMetrics(url)
 			}
-
+			reporttimer = time.After(reporttime)
+		default:
+			metric = measure.CollectMetrics(metric)
+			time.Sleep(sleeptime)
 		}
 	}
 }

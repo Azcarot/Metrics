@@ -5,6 +5,9 @@ import (
 	"strconv"
 )
 
+const GuageType = "gauge"
+const CounterType = "counter"
+
 type Gauge float64
 type Counter int64
 type MemStorage struct {
@@ -23,11 +26,11 @@ type MemInteractions interface {
 
 func (m *MemStorage) StoreMetrics(n string, t string, v string) error {
 	switch t {
-	case "gauge":
+	case GuageType:
 		value, err := strconv.ParseFloat(v, 64)
 		m.Gaugemem[n] = Gauge(value)
 		return err
-	case "counter":
+	case CounterType:
 		value, err := strconv.Atoi(v)
 		m.Countermem[n] += Counter(value)
 		return err
@@ -53,7 +56,7 @@ func (m *MemStorage) GetStoredMetrics(n string, t string) (string, error) {
 	var result string
 	var err error
 	switch t {
-	case "gauge":
+	case GuageType:
 		val, ok := m.Gaugemem[n]
 
 		if ok {
@@ -62,7 +65,7 @@ func (m *MemStorage) GetStoredMetrics(n string, t string) (string, error) {
 			err = errors.New("no metric stored")
 		}
 
-	case "counter":
+	case CounterType:
 		val, ok := m.Countermem[n]
 		if ok {
 			result = strconv.Itoa(int(val))
@@ -76,28 +79,28 @@ func (m *MemStorage) GetStoredMetrics(n string, t string) (string, error) {
 }
 
 var MetricNameTypes = map[string]string{
-	"PollCount":    "counter",
-	"Frees":        "gauge",
-	"GCSys":        "gauge",
-	"HeapAlloc":    "gauge",
-	"HeapIdle":     "gauge",
-	"HeapInuse":    "gauge",
-	"HeapObjects":  "gauge",
-	"HeapReleased": "gauge",
-	"HeapSys":      "gauge",
-	"LastGC":       "gauge",
-	"Lookups":      "gauge",
-	"MCacheInuse":  "gauge",
-	"MCacheSys":    "gauge",
-	"NextGC":       "gauge",
-	"Mallocs":      "gauge",
-	"NumForcedGC":  "gauge",
-	"NumGC":        "gauge",
-	"OtherSys":     "gauge",
-	"PauseTotalNs": "gauge",
-	"StackInuse":   "gauge",
-	"StackSys":     "gauge",
-	"Sys":          "gauge",
-	"TotalAlloc":   "gauge",
-	"RandomValue":  "gauge",
+	"PollCount":    CounterType,
+	"Frees":        GuageType,
+	"GCSys":        GuageType,
+	"HeapAlloc":    GuageType,
+	"HeapIdle":     GuageType,
+	"HeapInuse":    GuageType,
+	"HeapObjects":  GuageType,
+	"HeapReleased": GuageType,
+	"HeapSys":      GuageType,
+	"LastGC":       GuageType,
+	"Lookups":      GuageType,
+	"MCacheInuse":  GuageType,
+	"MCacheSys":    GuageType,
+	"NextGC":       GuageType,
+	"Mallocs":      GuageType,
+	"NumForcedGC":  GuageType,
+	"NumGC":        GuageType,
+	"OtherSys":     GuageType,
+	"PauseTotalNs": GuageType,
+	"StackInuse":   GuageType,
+	"StackSys":     GuageType,
+	"Sys":          GuageType,
+	"TotalAlloc":   GuageType,
+	"RandomValue":  GuageType,
 }
