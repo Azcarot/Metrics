@@ -17,10 +17,11 @@ func (st *StorageHandler) HandlePostMetrics(res http.ResponseWriter, req *http.R
 	switch strings.ToLower(chi.URLParam(req, "type")) {
 	case types.CounterType, types.GuageType:
 		err := st.Storage.StoreMetrics(chi.URLParam(req, "name"), strings.ToLower(chi.URLParam(req, "type")), chi.URLParam(req, "value"))
-		if err == nil {
-			res.WriteHeader(http.StatusOK)
+		if err != nil {
+			res.WriteHeader(http.StatusBadRequest)
 			return
 		}
+		res.WriteHeader(http.StatusOK)
 	default:
 		res.WriteHeader(http.StatusBadRequest)
 		return

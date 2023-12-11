@@ -28,12 +28,16 @@ func (m *MemStorage) StoreMetrics(n string, t string, v string) error {
 	switch t {
 	case GuageType:
 		value, err := strconv.ParseFloat(v, 64)
+		if err != nil {
+			return err
+		}
 		m.Gaugemem[n] = Gauge(value)
-		return err
 	case CounterType:
 		value, err := strconv.Atoi(v)
+		if err != nil {
+			return err
+		}
 		m.Countermem[n] += Counter(value)
-		return err
 	}
 	return nil
 }
