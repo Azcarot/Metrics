@@ -4,28 +4,62 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/Azcarot/Metrics/cmd/types"
 	"github.com/go-chi/chi/v5"
+	"go.uber.org/zap"
 )
 
-func (st *StorageHandler) HandlePostMetrics(res http.ResponseWriter, req *http.Request) {
-	if len(chi.URLParam(req, "name")) == 0 || len(chi.URLParam(req, "value")) == 0 || len(chi.URLParam(req, "type")) == 0 {
-		res.WriteHeader(http.StatusBadRequest)
-		return
+var sugar zap.SugaredLogger
+
+type (
+	// берём структуру для хранения сведений об ответе
+	responseData struct {
+		status int
+		size   int
 	}
-	switch strings.ToLower(chi.URLParam(req, "type")) {
-	case types.CounterType, types.GuageType:
-		err := st.Storage.StoreMetrics(chi.URLParam(req, "name"), strings.ToLower(chi.URLParam(req, "type")), chi.URLParam(req, "value"))
-		if err != nil {
+
+	// добавляем реализацию http.ResponseWriter
+	loggingResponseWriter struct {
+		http.ResponseWriter // встраиваем оригинальный http.ResponseWriter
+		responseData        *responseData
+	}
+)
+
+func (r *loggingResponseWriter) Write(b []byte) (int, error) {
+	// записываем ответ, используя оригинальный http.ResponseWriter
+	size, err := r.ResponseWriter.Write(b)
+	r.responseData.size += size // захватываем размер
+	return size, err
+}
+
+func (r *loggingResponseWriter) WriteHeader(statusCode int) {
+	// записываем код статуса, используя оригинальный http.ResponseWriter
+	r.ResponseWriter.WriteHeader(statusCode)
+	r.responseData.status = statusCode // захватываем код статуса
+}
+
+func (st *StorageHandler) HandlePostMetrics() http.Handler {
+	postMetric := func(res http.ResponseWriter, req *http.Request) {
+		if len(chi.URLParam(req, "name")) == 0 || len(chi.URLParam(req, "value")) == 0 || len(chi.URLParam(req, "type")) == 0 {
 			res.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		res.WriteHeader(http.StatusOK)
-	default:
-		res.WriteHeader(http.StatusBadRequest)
-		return
+		switch strings.ToLower(chi.URLParam(req, "type")) {
+		case types.CounterType, types.GuageType:
+			err := st.Storage.StoreMetrics(chi.URLParam(req, "name"), strings.ToLower(chi.URLParam(req, "type")), chi.URLParam(req, "value"))
+			if err != nil {
+				res.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			res.WriteHeader(http.StatusOK)
+		default:
+			res.WriteHeader(http.StatusBadRequest)
+			return
+		}
 	}
+	return http.HandlerFunc(postMetric)
 }
 
 func MakeRouter() *chi.Mux {
@@ -33,12 +67,20 @@ func MakeRouter() *chi.Mux {
 		Storage: &types.MemStorage{
 			Gaugemem: make(map[string]types.Gauge), Countermem: make(map[string]types.Counter)},
 	}
+	logger, err := zap.NewDevelopment()
+	if err != nil {
+		// вызываем панику, если ошибка
+		panic(err)
+	}
+	defer logger.Sync()
+	// делаем регистратор SugaredLogger
+	sugar = *logger.Sugar()
 	r := chi.NewRouter()
 	r.Use()
 	r.Route("/", func(r chi.Router) {
-		r.Get("/", http.HandlerFunc(storagehandler.HandleGetAllMetrics))
-		r.Post("/update/{type}/{name}/{value}", http.HandlerFunc(storagehandler.HandlePostMetrics))
-		r.Get("/value/{name}/{type}", http.HandlerFunc(storagehandler.HandleGetMetrics))
+		r.Get("/", WithLogging(storagehandler.HandleGetAllMetrics()).ServeHTTP)
+		r.Post("/update/{type}/{name}/{value}", WithLogging(storagehandler.HandlePostMetrics()).ServeHTTP)
+		r.Get("/value/{name}/{type}", WithLogging(storagehandler.HandleGetMetrics()).ServeHTTP)
 	})
 	return r
 }
@@ -47,18 +89,54 @@ type StorageHandler struct {
 	Storage types.MemInteractions
 }
 
-func (st *StorageHandler) HandleGetMetrics(res http.ResponseWriter, req *http.Request) {
-	result, err := st.Storage.GetStoredMetrics(chi.URLParam(req, "type"), chi.URLParam(req, "name"))
-	res.Header().Add("Content-Type", "text/plain")
-	if err != nil {
-		res.WriteHeader(http.StatusNotFound)
-	} else {
-		io.WriteString(res, result)
+// WithLogging добавляет дополнительный код для регистрации сведений о запросе
+// и возвращает новый http.Handler.
+func WithLogging(h http.Handler) http.Handler {
+	logFn := func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+
+		responseData := &responseData{
+			status: 0,
+			size:   0,
+		}
+		lw := loggingResponseWriter{
+			ResponseWriter: w, // встраиваем оригинальный http.ResponseWriter
+			responseData:   responseData,
+		}
+		h.ServeHTTP(&lw, r) // внедряем реализацию http.ResponseWriter
+
+		duration := time.Since(start)
+
+		sugar.Infoln(
+			"uri", r.RequestURI,
+			"method", r.Method,
+			"status", responseData.status, // получаем перехваченный код статуса ответа
+			"duration", duration,
+			"size", responseData.size, // получаем перехваченный размер ответа
+		)
 	}
+	// возвращаем функционально расширенный хендлер
+	return http.HandlerFunc(logFn)
 }
 
-func (st *StorageHandler) HandleGetAllMetrics(res http.ResponseWriter, req *http.Request) {
-	result := st.Storage.GetAllMetrics()
-	io.WriteString(res, result)
-	res.Header().Add("Content-Type", "text/html")
+func (st *StorageHandler) HandleGetMetrics() http.Handler {
+	getMetric := func(res http.ResponseWriter, req *http.Request) {
+		result, err := st.Storage.GetStoredMetrics(chi.URLParam(req, "type"), chi.URLParam(req, "name"))
+		res.Header().Add("Content-Type", "text/plain")
+		if err != nil {
+			res.WriteHeader(http.StatusNotFound)
+		} else {
+			io.WriteString(res, result)
+		}
+	}
+	return http.HandlerFunc(getMetric)
+}
+
+func (st *StorageHandler) HandleGetAllMetrics() http.Handler {
+	getMetrics := func(res http.ResponseWriter, req *http.Request) {
+		result := st.Storage.GetAllMetrics()
+		io.WriteString(res, result)
+		res.Header().Add("Content-Type", "text/html")
+	}
+	return http.HandlerFunc(getMetrics)
 }
