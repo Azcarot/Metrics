@@ -11,7 +11,7 @@ import (
 	"github.com/Azcarot/Metrics/cmd/types"
 )
 
-func (st *StorageHandler) HandleJsonPostMetrics() http.Handler {
+func (st *StorageHandler) HandleJSONPostMetrics() http.Handler {
 	var metric types.Metrics
 
 	postMetric := func(res http.ResponseWriter, req *http.Request) {
@@ -40,7 +40,7 @@ func (st *StorageHandler) HandleJsonPostMetrics() http.Handler {
 				res.WriteHeader(http.StatusBadRequest)
 				return
 			}
-			res.Header().Set("Content-Type", types.JsonContentType)
+			res.Header().Set("Content-Type", types.JSONContentType)
 			resp, err := json.Marshal(metric)
 			if err != nil {
 				res.WriteHeader(http.StatusBadRequest)
@@ -55,7 +55,7 @@ func (st *StorageHandler) HandleJsonPostMetrics() http.Handler {
 				res.WriteHeader(http.StatusBadRequest)
 				return
 			}
-			res.Header().Set("Content-Type", types.JsonContentType)
+			res.Header().Set("Content-Type", types.JSONContentType)
 			resp, err := json.Marshal(metric)
 			if err != nil {
 				res.WriteHeader(http.StatusBadRequest)
@@ -71,7 +71,7 @@ func (st *StorageHandler) HandleJsonPostMetrics() http.Handler {
 	return http.HandlerFunc(postMetric)
 }
 
-func (st *StorageHandler) HandleJsonGetMetrics() http.Handler {
+func (st *StorageHandler) HandleJSONGetMetrics() http.Handler {
 	var metric types.Metrics
 	getMetric := func(res http.ResponseWriter, req *http.Request) {
 
@@ -89,7 +89,7 @@ func (st *StorageHandler) HandleJsonGetMetrics() http.Handler {
 		}
 
 		result, err := st.Storage.GetStoredMetrics(metric.MType, metric.ID)
-		res.Header().Add("Content-Type", types.JsonContentType)
+		res.Header().Add("Content-Type", types.JSONContentType)
 		if err != nil {
 			res.WriteHeader(http.StatusNotFound)
 		} else {
@@ -120,9 +120,6 @@ func (st *StorageHandler) HandleJsonGetMetrics() http.Handler {
 					return
 				}
 				res.Write(resp)
-			default:
-				res.WriteHeader(http.StatusNotFound)
-				return
 			}
 		}
 	}

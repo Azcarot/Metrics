@@ -79,8 +79,8 @@ func MakeRouter() *chi.Mux {
 	r.Use()
 	r.Route("/", func(r chi.Router) {
 		r.Get("/", WithLogging(storagehandler.HandleGetAllMetrics()).ServeHTTP)
-		r.Post("/update", WithLogging(storagehandler.HandleJsonPostMetrics()).ServeHTTP)
-		r.Post("/value", WithLogging(storagehandler.HandleJsonGetMetrics()).ServeHTTP)
+		r.Post("/update", WithLogging(storagehandler.HandleJSONPostMetrics()).ServeHTTP)
+		r.Post("/value", WithLogging(storagehandler.HandleJSONGetMetrics()).ServeHTTP)
 		r.Post("/update/{type}/{name}/{value}", WithLogging(storagehandler.HandlePostMetrics()).ServeHTTP)
 		r.Get("/value/{name}/{type}", WithLogging(storagehandler.HandleGetMetrics()).ServeHTTP)
 	})
@@ -112,6 +112,7 @@ func WithLogging(h http.Handler) http.Handler {
 		sugar.Infoln(
 			"uri", r.RequestURI,
 			"method", r.Method,
+			"body", r.Body,
 			"status", responseData.status, // получаем перехваченный код статуса ответа
 			"duration", duration,
 			"size", responseData.size, // получаем перехваченный размер ответа

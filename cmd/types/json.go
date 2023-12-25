@@ -7,4 +7,4 @@ type Metrics struct {
 	Value *float64 `json:"value,omitempty"` // значение метрики в случае передачи gauge
 }
 
-const JsonContentType = "application/json"
+const JSONContentType = "application/json"
