@@ -79,8 +79,8 @@ func MakeRouter() *chi.Mux {
 	r.Use()
 	r.Route("/", func(r chi.Router) {
 		r.Get("/", WithLogging(storagehandler.HandleGetAllMetrics()).ServeHTTP)
-		r.Post("/update", WithLogging(storagehandler.HandleJSONPostMetrics()).ServeHTTP)
-		r.Post("/value", WithLogging(storagehandler.HandleJSONGetMetrics()).ServeHTTP)
+		r.Post("/update/", WithLogging(storagehandler.HandleJSONPostMetrics()).ServeHTTP)
+		r.Post("/value/", WithLogging(storagehandler.HandleJSONGetMetrics()).ServeHTTP)
 		r.Post("/update/{type}/{name}/{value}", WithLogging(storagehandler.HandlePostMetrics()).ServeHTTP)
 		r.Get("/value/{name}/{type}", WithLogging(storagehandler.HandleGetMetrics()).ServeHTTP)
 	})
