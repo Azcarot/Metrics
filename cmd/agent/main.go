@@ -70,6 +70,8 @@ func main() {
 	for {
 		select {
 		case <-reporttimer:
+			body := handlers.MakeJSON(metric)
+			handlers.PostJSONMetrics(body, agentData.addr)
 			urls := handlers.Makepath(metric, agentData.addr)
 			for _, url := range urls {
 				handlers.PostMetrics(url)

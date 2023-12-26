@@ -2,12 +2,38 @@ package handlers
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/Azcarot/Metrics/cmd/types"
 )
+
+func MakeJSON(m types.MemStorage) []byte {
+	var body []types.Metrics
+	var metric types.Metrics
+	for name, value := range m.Gaugemem {
+		newvalue := float64(value)
+		metric.ID = name
+		metric.MType = "gauge"
+		metric.Value = &newvalue
+		body = append(body, metric)
+	}
+	for name, value := range m.Countermem {
+		newvalue := int64(value)
+		metric.ID = name
+		metric.MType = "counter"
+		metric.Delta = &newvalue
+		body = append(body, metric)
+
+	}
+	resp, err := json.Marshal(body)
+	if err != nil {
+		panic(fmt.Sprintf("cannot make json %s ", body))
+	}
+	return resp
+}
 
 func Makepath(m types.MemStorage, a string) []string {
 	var path []string
@@ -21,6 +47,18 @@ func Makepath(m types.MemStorage, a string) []string {
 		pathscount++
 	}
 	return path
+}
+
+func PostJSONMetrics(b []byte, a string) *http.Response {
+	pth := "http://" + a + "/update/"
+	resp, err := http.NewRequest("POST", pth, bytes.NewBuffer(b))
+	if err != nil {
+		panic(fmt.Sprintf("cannot post %s ", b))
+	}
+	resp.Header.Add("Content-Type", types.CounterType)
+	client := &http.Client{}
+	res, _ := client.Do(resp)
+	return res
 }
 
 func PostMetrics(pth string) *http.Response {
