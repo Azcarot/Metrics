@@ -1,12 +1,12 @@
 package handlers
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
-
-	"bytes"
-	"encoding/json"
 
 	"github.com/Azcarot/Metrics/cmd/types"
 )
@@ -16,22 +16,22 @@ func (st *StorageHandler) HandleJSONPostMetrics() http.Handler {
 
 	postMetric := func(res http.ResponseWriter, req *http.Request) {
 		var buf bytes.Buffer
-		jsonDecoder := json.NewDecoder(&buf)
+		res.Header().Set("Content-Type", types.JSONContentType)
 		// читаем тело запроса
 		_, err := buf.ReadFrom(req.Body)
+
 		if err != nil {
 			res.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		if err = jsonDecoder.Decode(&metric); err != nil {
-			res.WriteHeader(http.StatusBadRequest)
+		if err = json.Unmarshal(buf.Bytes(), &metric); err != nil {
+			fmt.Println(err)
 			return
 		}
 		if len(metric.ID) == 0 || len(metric.MType) == 0 {
 			res.WriteHeader(http.StatusBadRequest)
 			return
 		}
-
 		switch metric.MType {
 		case types.CounterType:
 			value := strconv.Itoa(int(*metric.Delta))
@@ -40,14 +40,25 @@ func (st *StorageHandler) HandleJSONPostMetrics() http.Handler {
 				res.WriteHeader(http.StatusBadRequest)
 				return
 			}
-			res.Header().Set("Content-Type", types.JSONContentType)
+			result, err := st.Storage.GetStoredMetrics(metric.ID, strings.ToLower(metric.MType))
+
+			if err != nil {
+				res.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			newvalue, err := strconv.ParseInt(result, 0, 64)
+			if err != nil {
+				res.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			metric.Delta = &newvalue
 			resp, err := json.Marshal(metric)
 			if err != nil {
 				res.WriteHeader(http.StatusBadRequest)
 				return
 			}
-			res.Write(resp)
 			res.WriteHeader(http.StatusOK)
+			res.Write(resp)
 		case types.GuageType:
 			value := strconv.FormatFloat(float64(*metric.Value), 'g', -1, 64)
 			err := st.Storage.StoreMetrics(metric.ID, strings.ToLower(metric.MType), value)
@@ -55,14 +66,26 @@ func (st *StorageHandler) HandleJSONPostMetrics() http.Handler {
 				res.WriteHeader(http.StatusBadRequest)
 				return
 			}
-			res.Header().Set("Content-Type", types.JSONContentType)
+			result, err := st.Storage.GetStoredMetrics(metric.ID, strings.ToLower(metric.MType))
+
+			if err != nil {
+				res.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			newvalue, err := strconv.ParseFloat(result, 64)
+			if err != nil {
+				res.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			metric.Value = &newvalue
 			resp, err := json.Marshal(metric)
 			if err != nil {
 				res.WriteHeader(http.StatusBadRequest)
 				return
 			}
-			res.Write(resp)
+
 			res.WriteHeader(http.StatusOK)
+			res.Write(resp)
 		default:
 			res.WriteHeader(http.StatusBadRequest)
 			return
@@ -93,6 +116,7 @@ func (st *StorageHandler) HandleJSONGetMetrics() http.Handler {
 		if err != nil {
 			res.WriteHeader(http.StatusNotFound)
 		} else {
+			println(metric.MType)
 			switch metric.MType {
 			case types.CounterType:
 				value, err := strconv.ParseInt(result, 0, 64)
@@ -120,6 +144,9 @@ func (st *StorageHandler) HandleJSONGetMetrics() http.Handler {
 					return
 				}
 				res.Write(resp)
+			default:
+				res.WriteHeader(http.StatusNotFound)
+				return
 			}
 		}
 	}
