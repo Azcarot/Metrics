@@ -13,6 +13,10 @@ func CollectMetrics(m types.MemStorage) types.MemStorage {
 	m.Gaugemem = make(map[string]types.Gauge)
 	m.Countermem = make(map[string]types.Counter)
 	m.Countermem["PollCount"]++
+	m.Gaugemem["Alloc"] = types.Gauge(rtm.Alloc)
+	m.Gaugemem["GCCPUFraction"] = types.Gauge(rtm.GCCPUFraction)
+	m.Gaugemem["MSpanInuse"] = types.Gauge(rtm.MSpanInuse)
+	m.Gaugemem["MSpanSys"] = types.Gauge(rtm.MSpanSys)
 	m.Gaugemem["BuckHashSys"] = types.Gauge(rtm.BuckHashSys)
 	m.Gaugemem["Frees"] = types.Gauge(rtm.Frees)
 	m.Gaugemem["GCSys"] = types.Gauge(rtm.GCSys)
