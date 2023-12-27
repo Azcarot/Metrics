@@ -10,29 +10,34 @@ import (
 	"github.com/Azcarot/Metrics/cmd/types"
 )
 
-func MakeJSON(m types.MemStorage) []byte {
-	var body []types.Metrics
+func MakeJSON(m types.MemStorage) [][]byte {
+	var body [][]byte
 	var metric types.Metrics
 	for name, value := range m.Gaugemem {
 		newvalue := float64(value)
 		metric.ID = name
 		metric.MType = "gauge"
 		metric.Value = &newvalue
-		body = append(body, metric)
+		resp, err := json.Marshal(metric)
+		if err != nil {
+			panic(fmt.Sprintf("cannot make json %s ", body))
+		}
+		body = append(body, resp)
 	}
 	for name, value := range m.Countermem {
 		newvalue := int64(value)
 		metric.ID = name
 		metric.MType = "counter"
 		metric.Delta = &newvalue
-		body = append(body, metric)
+		resp, err := json.Marshal(metric)
+		if err != nil {
+			panic(fmt.Sprintf("cannot make json %s ", body))
+		}
+		body = append(body, resp)
 
 	}
-	resp, err := json.Marshal(body)
-	if err != nil {
-		panic(fmt.Sprintf("cannot make json %s ", body))
-	}
-	return resp
+
+	return body
 }
 
 func Makepath(m types.MemStorage, a string) []string {
