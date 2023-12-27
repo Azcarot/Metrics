@@ -56,10 +56,7 @@ func Makepath(m types.MemStorage, a string) []string {
 
 func PostJSONMetrics(b []byte, a string) *http.Response {
 	pth := "http://" + a + "/update/"
-	resp, err := http.NewRequest("POST", pth, bytes.NewBuffer(b))
-	if err != nil {
-		panic(fmt.Sprintf("cannot post %s ", b))
-	}
+	resp, _ := http.NewRequest("POST", pth, bytes.NewBuffer(b))
 	resp.Header.Add("Content-Type", types.CounterType)
 	client := &http.Client{}
 	res, _ := client.Do(resp)
