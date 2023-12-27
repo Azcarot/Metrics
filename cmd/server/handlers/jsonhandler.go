@@ -3,6 +3,7 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -89,9 +90,9 @@ func (st *StorageHandler) HandleJSONPostMetrics() http.Handler {
 }
 
 func (st *StorageHandler) HandleJSONGetMetrics() http.Handler {
-	var metric types.Metrics
-	getMetric := func(res http.ResponseWriter, req *http.Request) {
 
+	getMetric := func(res http.ResponseWriter, req *http.Request) {
+		var metric types.Metrics
 		var buf bytes.Buffer
 		// читаем тело запроса
 		_, err := buf.ReadFrom(req.Body)
@@ -109,6 +110,7 @@ func (st *StorageHandler) HandleJSONGetMetrics() http.Handler {
 			if err != nil {
 				res.WriteHeader(http.StatusNotFound)
 			} else {
+				fmt.Println("Type ", metric.MType, " Name ", metric.ID)
 				switch metric.MType {
 				case types.CounterType:
 					value, err := strconv.ParseInt(result, 0, 64)
