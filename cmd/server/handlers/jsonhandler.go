@@ -3,7 +3,6 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -25,7 +24,6 @@ func (st *StorageHandler) HandleJSONPostMetrics() http.Handler {
 			return
 		}
 		if err = json.Unmarshal(buf.Bytes(), &metricData); err != nil {
-			fmt.Println(err)
 			res.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -106,7 +104,7 @@ func (st *StorageHandler) HandleJSONGetMetrics() http.Handler {
 			return
 		}
 		if len(metric.MType) > 0 && len(metric.ID) > 0 {
-			result, err := st.Storage.GetStoredMetrics(metric.MType, metric.ID)
+			result, err := st.Storage.GetStoredMetrics(metric.ID, strings.ToLower(metric.MType))
 			res.Header().Add("Content-Type", types.JSONContentType)
 			if err != nil {
 				res.WriteHeader(http.StatusNotFound)
