@@ -138,7 +138,6 @@ func (st *StorageHandler) HandleJSONGetMetrics() http.Handler {
 			res.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		fmt.Println("\n", metric.MType, "\n")
 		if len(metric.MType) > 0 && len(metric.ID) > 0 {
 			result, err := st.Storage.GetStoredMetrics(metric.ID, strings.ToLower(metric.MType))
 			res.Header().Add("Content-Type", types.JSONContentType)
