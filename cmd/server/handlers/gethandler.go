@@ -126,7 +126,7 @@ func (st *StorageHandler) HandleGetMetrics() http.Handler {
 	getMetric := func(res http.ResponseWriter, req *http.Request) {
 
 		result, err := st.Storage.GetStoredMetrics(chi.URLParam(req, "type"), chi.URLParam(req, "name"))
-		res.Header().Add("Content-Type", "text/html")
+		res.Header().Set("Content-Type", "text/html")
 		if err != nil {
 			res.WriteHeader(http.StatusNotFound)
 		} else {
@@ -139,8 +139,9 @@ func (st *StorageHandler) HandleGetMetrics() http.Handler {
 func (st *StorageHandler) HandleGetAllMetrics() http.Handler {
 	getMetrics := func(res http.ResponseWriter, req *http.Request) {
 		result := st.Storage.GetAllMetrics()
+		res.Header().Set("Content-Type", "text/html")
 		io.WriteString(res, result)
-		res.Header().Add("Content-Type", "text/html")
+
 	}
 	return http.HandlerFunc(getMetrics)
 }
