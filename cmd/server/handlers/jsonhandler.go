@@ -51,24 +51,8 @@ func (st *StorageHandler) HandleJSONPostMetrics() http.Handler {
 
 	postMetric := func(res http.ResponseWriter, req *http.Request) {
 		var buf bytes.Buffer
-		// переменная reader будет равна r.Body или *gzip.Reader
-		var reader io.Reader
-
-		if req.Header.Get(`Content-Encoding`) == `gzip` {
-			gz, err := gzip.NewReader(req.Body)
-			if err != nil {
-				http.Error(res, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			reader = gz
-			defer gz.Close()
-		} else {
-			reader = req.Body
-		}
-
-		res.Header().Set("Content-Type", types.JSONContentType)
 		// читаем тело запроса
-		_, err := buf.ReadFrom(reader)
+		_, err := buf.ReadFrom(req.Body)
 		if err != nil {
 			res.WriteHeader(http.StatusBadRequest)
 			return
@@ -144,19 +128,8 @@ func (st *StorageHandler) HandleJSONGetMetrics() http.Handler {
 		var metric types.Metrics
 		var buf bytes.Buffer
 		// переменная reader будет равна r.Body или *gzip.Reader
-		var reader io.Reader
-		if req.Header.Get(`Content-Encoding`) == `gzip` {
-			gz, err := gzip.NewReader(req.Body)
-			if err != nil {
-				http.Error(res, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			reader = gz
-			defer gz.Close()
-		} else {
-			reader = req.Body
-		}
-		_, err := buf.ReadFrom(reader)
+
+		_, err := buf.ReadFrom(req.Body)
 		if err != nil {
 			res.WriteHeader(http.StatusBadRequest)
 			return
@@ -165,6 +138,7 @@ func (st *StorageHandler) HandleJSONGetMetrics() http.Handler {
 			res.WriteHeader(http.StatusBadRequest)
 			return
 		}
+		fmt.Println("\n", metric.MType, "\n")
 		if len(metric.MType) > 0 && len(metric.ID) > 0 {
 			result, err := st.Storage.GetStoredMetrics(metric.ID, strings.ToLower(metric.MType))
 			res.Header().Add("Content-Type", types.JSONContentType)

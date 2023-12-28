@@ -77,7 +77,7 @@ func PostJSONMetrics(b []byte, a string) *http.Response {
 		panic(fmt.Sprintf("cannot post %s ", b))
 	}
 	resp.Header.Add("Content-Type", types.JSONContentType)
-	resp.Header.Set("Content-Encoding", "gzip")
+	resp.Header.Add("Content-Encoding", "gzip")
 	client := &http.Client{}
 	res, _ := client.Do(resp)
 	return res
