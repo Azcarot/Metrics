@@ -2,8 +2,10 @@ package handlers
 
 import (
 	"bytes"
+	"compress/gzip"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -11,15 +13,62 @@ import (
 	"github.com/Azcarot/Metrics/cmd/types"
 )
 
+type gzipWriter struct {
+	http.ResponseWriter
+	Writer io.Writer
+}
+
+func (w gzipWriter) Write(b []byte) (int, error) {
+	// w.Writer будет отвечать за gzip-сжатие, поэтому пишем в него
+	return w.Writer.Write(b)
+}
+
+func GzipHandler(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// создаём gzip.Writer поверх текущего w
+		gz, err := gzip.NewWriterLevel(w, gzip.BestSpeed)
+		if err != nil {
+			io.WriteString(w, err.Error())
+			return
+		}
+		defer gz.Close()
+
+		w.Header().Set("Content-Encoding", "gzip")
+		// передаём обработчику страницы переменную типа gzipWriter для вывода данных
+		next.ServeHTTP(gzipWriter{ResponseWriter: w, Writer: gz}, r)
+	})
+}
+
 func (st *StorageHandler) HandleJSONPostMetrics() http.Handler {
 	var metricData types.Metrics
 	var metricResult types.Metrics
 
 	postMetric := func(res http.ResponseWriter, req *http.Request) {
 		var buf bytes.Buffer
+		// переменная reader будет равна r.Body или *gzip.Reader
+		var reader io.Reader
+
+		if req.Header.Get(`Content-Encoding`) == `gzip` {
+			gz, err := gzip.NewReader(req.Body)
+			if err != nil {
+				http.Error(res, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			reader = gz
+			defer gz.Close()
+		} else {
+			reader = req.Body
+		}
+
 		res.Header().Set("Content-Type", types.JSONContentType)
 		// читаем тело запроса
-		_, err := buf.ReadFrom(req.Body)
+		_, err := buf.ReadFrom(reader)
 		if err != nil {
 			res.WriteHeader(http.StatusBadRequest)
 			return
@@ -94,8 +143,20 @@ func (st *StorageHandler) HandleJSONGetMetrics() http.Handler {
 	getMetric := func(res http.ResponseWriter, req *http.Request) {
 		var metric types.Metrics
 		var buf bytes.Buffer
-		// читаем тело запроса
-		_, err := buf.ReadFrom(req.Body)
+		// переменная reader будет равна r.Body или *gzip.Reader
+		var reader io.Reader
+		if req.Header.Get(`Content-Encoding`) == `gzip` {
+			gz, err := gzip.NewReader(req.Body)
+			if err != nil {
+				http.Error(res, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			reader = gz
+			defer gz.Close()
+		} else {
+			reader = req.Body
+		}
+		_, err := buf.ReadFrom(reader)
 		if err != nil {
 			res.WriteHeader(http.StatusBadRequest)
 			return

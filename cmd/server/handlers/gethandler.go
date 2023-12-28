@@ -78,11 +78,11 @@ func MakeRouter() *chi.Mux {
 	r := chi.NewRouter()
 	r.Use()
 	r.Route("/", func(r chi.Router) {
-		r.Get("/", WithLogging(storagehandler.HandleGetAllMetrics()).ServeHTTP)
-		r.Post("/update/", WithLogging(storagehandler.HandleJSONPostMetrics()).ServeHTTP)
-		r.Post("/value/", WithLogging(storagehandler.HandleJSONGetMetrics()).ServeHTTP)
-		r.Post("/update/{type}/{name}/{value}", WithLogging(storagehandler.HandlePostMetrics()).ServeHTTP)
-		r.Get("/value/{name}/{type}", WithLogging(storagehandler.HandleGetMetrics()).ServeHTTP)
+		r.Get("/", WithLogging(GzipHandler(storagehandler.HandleGetAllMetrics())).ServeHTTP)
+		r.Post("/update/", WithLogging(GzipHandler(storagehandler.HandleJSONPostMetrics())).ServeHTTP)
+		r.Post("/value/", WithLogging(GzipHandler(storagehandler.HandleJSONGetMetrics())).ServeHTTP)
+		r.Post("/update/{type}/{name}/{value}", WithLogging(GzipHandler(storagehandler.HandlePostMetrics())).ServeHTTP)
+		r.Get("/value/{name}/{type}", WithLogging(GzipHandler(storagehandler.HandleGetMetrics())).ServeHTTP)
 	})
 	return r
 }
@@ -124,6 +124,7 @@ func WithLogging(h http.Handler) http.Handler {
 
 func (st *StorageHandler) HandleGetMetrics() http.Handler {
 	getMetric := func(res http.ResponseWriter, req *http.Request) {
+
 		result, err := st.Storage.GetStoredMetrics(chi.URLParam(req, "type"), chi.URLParam(req, "name"))
 		res.Header().Add("Content-Type", "text/plain")
 		if err != nil {
