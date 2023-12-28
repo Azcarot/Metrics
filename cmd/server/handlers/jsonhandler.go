@@ -27,7 +27,6 @@ func GzipHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
-			w.Header().Set("Content-Type", "text/plain")
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -116,6 +115,7 @@ func (st *StorageHandler) HandleJSONPostMetrics() http.Handler {
 			res.WriteHeader(http.StatusBadRequest)
 			return
 		}
+		res.Header().Set("Content-Type", types.JSONContentType)
 		res.WriteHeader(http.StatusOK)
 		res.Write(resp)
 	}
