@@ -38,6 +38,8 @@ type MemInteractions interface {
 	GetStoredMetrics(string, string) (string, error)
 	StoreMetrics(string, string, string) error
 	GetAllMetrics() string
+	ReadMetricsFromFile(string)
+	GetAllMetricsAsMetricType() []Metrics
 }
 
 func (m *MemStorage) StoreMetrics(n string, t string, v string) error {
@@ -77,6 +79,25 @@ func (m *MemStorage) ReadMetricsFromFile(filename string) {
 
 		}
 	}
+}
+
+func (m *MemStorage) GetAllMetricsAsMetricType() []Metrics {
+	var FinalData []Metrics
+	for n, v := range m.Gaugemem {
+		var data Metrics
+		data.ID = n
+		*data.Value = float64(v)
+		data.MType = "gauge"
+		FinalData = append(FinalData, data)
+	}
+	for n, v := range m.Countermem {
+		var data Metrics
+		data.ID = n
+		*data.Delta = int64(v)
+		data.MType = "counter"
+		FinalData = append(FinalData, data)
+	}
+	return FinalData
 }
 
 func (m *MemStorage) GetAllMetrics() string {

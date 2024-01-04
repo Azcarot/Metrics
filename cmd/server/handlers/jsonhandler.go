@@ -73,7 +73,7 @@ func (st *StorageHandler) HandleJSONPostMetrics(flag types.Flags) http.Handler {
 			}
 			if len(flag.FlagFileStorage) != 0 {
 				fileName := flag.FlagAddr
-				writeToFile(fileName, metricData)
+				WriteToFile(fileName, metricData)
 			}
 			result, err := st.Storage.GetStoredMetrics(metricData.ID, strings.ToLower(metricData.MType))
 
@@ -99,7 +99,7 @@ func (st *StorageHandler) HandleJSONPostMetrics(flag types.Flags) http.Handler {
 			}
 			if len(flag.FlagFileStorage) != 0 {
 				fileName := flag.FlagAddr
-				writeToFile(fileName, metricData)
+				WriteToFile(fileName, metricData)
 			}
 			result, err := st.Storage.GetStoredMetrics(metricData.ID, strings.ToLower(metricData.MType))
 
@@ -133,7 +133,7 @@ func (st *StorageHandler) HandleJSONPostMetrics(flag types.Flags) http.Handler {
 	return http.HandlerFunc(postMetric)
 }
 
-func writeToFile(f string, mdata types.Metrics) {
+func WriteToFile(f string, mdata types.Metrics) {
 	Producer, err := types.NewProducer(f)
 	if err != nil {
 		log.Fatal(err)
