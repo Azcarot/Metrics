@@ -134,7 +134,7 @@ func (st *StorageHandler) HandleJSONPostMetrics(flag types.Flags) http.Handler {
 }
 
 func writeToFile(f string, mdata types.Metrics) {
-	Producer, err := NewProducer(f)
+	Producer, err := types.NewProducer(f)
 	if err != nil {
 		log.Fatal(err)
 	}

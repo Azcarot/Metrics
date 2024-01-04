@@ -173,36 +173,9 @@ func (st *StorageHandler) HandleGetMetrics() http.Handler {
 
 func (st *StorageHandler) HandleGetAllMetrics(flag types.Flags) http.Handler {
 	getMetrics := func(res http.ResponseWriter, req *http.Request) {
-		// if len(flag.FlagFileStorage) == 0 {
 		result := st.Storage.GetAllMetrics()
 		res.Header().Set("Content-Type", "text/html")
 		io.WriteString(res, result)
-		// } else {
-		// 	fileName := flag.FlagFileStorage
-		// 	Consumer, err := NewConsumer(fileName)
-		// 	if err != nil {
-		// 		log.Fatal(err)
-		// 	}
-		// 	defer Consumer.Close()
-		// 	metrics, err := Consumer.ReadEvent()
-		// 	if err != nil {
-		// 		log.Fatal(err)
-		// 	}
-		// 	var result string
-		// 	for _, metric := range *metrics {
-		// 		switch strings.ToLower(metric.MType) {
-		// 		case "gauge":
-		// 			value := strconv.FormatFloat(float64(*metric.Value), 'g', -1, 64)
-		// 			result += "Metrics name: " + metric.ID + "\n" + "Metrics value: " + value + "\n"
-		// 		case "counter":
-		// 			value := strconv.Itoa(int(*metric.Delta))
-		// 			result += "Metrics name: " + metric.ID + "\n" + "Metrics value: " + value + "\n"
-		// 		}
-		// 	}
-		// // 	io.WriteString(res, result)
-
-		// }
-
 	}
 	return http.HandlerFunc(getMetrics)
 }

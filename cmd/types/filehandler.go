@@ -1,10 +1,8 @@
-package handlers
+package types
 
 import (
 	"encoding/json"
 	"os"
-
-	"github.com/Azcarot/Metrics/cmd/types"
 )
 
 type Producer struct {
@@ -37,7 +35,7 @@ func NewProducer(fileName string) (*Producer, error) {
 	}, nil
 }
 
-func (p *Producer) WriteEvent(event *types.Metrics) error {
+func (p *Producer) WriteEvent(event *Metrics) error {
 	return p.encoder.Encode(&event)
 }
 
@@ -53,8 +51,8 @@ func NewConsumer(fileName string) (*Consumer, error) {
 	}, nil
 }
 
-func (c *Consumer) ReadEvent() (*[]types.Metrics, error) {
-	event := &[]types.Metrics{}
+func (c *Consumer) ReadEvent() (*[]Metrics, error) {
+	event := &[]Metrics{}
 	if err := c.decoder.Decode(&event); err != nil {
 		return nil, err
 	}

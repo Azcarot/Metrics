@@ -2,7 +2,9 @@ package types
 
 import (
 	"errors"
+	"log"
 	"strconv"
+	"strings"
 )
 
 const GuageType = "gauge"
@@ -54,6 +56,27 @@ func (m *MemStorage) StoreMetrics(n string, t string, v string) error {
 		m.Countermem[n] += Counter(value)
 	}
 	return nil
+}
+
+func (m *MemStorage) ReadMetricsFromFile(filename string) {
+	Consumer, err := NewConsumer(filename)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer Consumer.Close()
+	metrics, err := Consumer.ReadEvent()
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, metric := range *metrics {
+		switch strings.ToLower(metric.MType) {
+		case "gauge":
+			m.Gaugemem[metric.ID] = Gauge(*metric.Value)
+		case "counter":
+			m.Countermem[metric.ID] = Counter(*metric.Delta)
+
+		}
+	}
 }
 
 func (m *MemStorage) GetAllMetrics() string {
