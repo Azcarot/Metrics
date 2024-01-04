@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -45,7 +46,7 @@ func GzipHandler(next http.Handler) http.Handler {
 	})
 }
 
-func (st *StorageHandler) HandleJSONPostMetrics() http.Handler {
+func (st *StorageHandler) HandleJSONPostMetrics(flag types.Flags) http.Handler {
 	var metricData types.Metrics
 	var metricResult types.Metrics
 
@@ -70,6 +71,10 @@ func (st *StorageHandler) HandleJSONPostMetrics() http.Handler {
 				res.WriteHeader(http.StatusBadRequest)
 				return
 			}
+			if len(flag.FlagFileStorage) != 0 {
+				fileName := flag.FlagAddr
+				writeToFile(fileName, metricData)
+			}
 			result, err := st.Storage.GetStoredMetrics(metricData.ID, strings.ToLower(metricData.MType))
 
 			if err != nil {
@@ -86,10 +91,15 @@ func (st *StorageHandler) HandleJSONPostMetrics() http.Handler {
 
 		case types.GuageType:
 			value := strconv.FormatFloat(float64(*metricData.Value), 'g', -1, 64)
+
 			err := st.Storage.StoreMetrics(metricData.ID, strings.ToLower(metricData.MType), value)
 			if err != nil {
 				res.WriteHeader(http.StatusBadRequest)
 				return
+			}
+			if len(flag.FlagFileStorage) != 0 {
+				fileName := flag.FlagAddr
+				writeToFile(fileName, metricData)
 			}
 			result, err := st.Storage.GetStoredMetrics(metricData.ID, strings.ToLower(metricData.MType))
 
@@ -121,6 +131,17 @@ func (st *StorageHandler) HandleJSONPostMetrics() http.Handler {
 	}
 
 	return http.HandlerFunc(postMetric)
+}
+
+func writeToFile(f string, mdata types.Metrics) {
+	Producer, err := NewProducer(f)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer Producer.Close()
+	if err := Producer.WriteEvent(&mdata); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func (st *StorageHandler) HandleJSONGetMetrics() http.Handler {

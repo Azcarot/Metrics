@@ -15,6 +15,20 @@ type MemStorage struct {
 	Countermem map[string]Counter
 }
 
+type Flags struct {
+	FlagAddr          string
+	FlagStoreInterval int
+	FlagFileStorage   string
+	FlagRestore       bool
+}
+
+type ServerENV struct {
+	Address       string `env:"ADDRESS"`
+	StoreInterval string `env:"STORE_INTERVAL"`
+	FileStorage   string `env:"FILE_STORAGE_PATH"`
+	Restore       bool   `env:"RESTORE"`
+}
+
 type AllowedMetrics struct {
 	Name string
 }
