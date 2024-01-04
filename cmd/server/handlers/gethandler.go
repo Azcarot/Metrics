@@ -79,7 +79,7 @@ func ParseFlagsAndENV() types.Flags {
 		log.Fatal(err)
 	}
 
-	if envcfg.Address != "" {
+	if len(envcfg.Address) > 0 {
 		Flag.FlagAddr = envcfg.Address
 	}
 	if envcfg.FileStorage != "" {
