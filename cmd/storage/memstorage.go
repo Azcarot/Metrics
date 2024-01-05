@@ -2,7 +2,6 @@ package storage
 
 import (
 	"errors"
-	"log"
 	"strconv"
 	"strings"
 )
@@ -61,15 +60,15 @@ func (m *MemStorage) StoreMetrics(n string, t string, v string) error {
 }
 
 func (m *MemStorage) ReadMetricsFromFile(filename string) {
-	Consumer, err := NewConsumer(filename)
-	if err != nil {
-		log.Fatal(err)
-	}
+	Consumer, _ := NewConsumer(filename)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 	defer Consumer.Close()
-	metrics, err := Consumer.ReadEvent()
-	if err != nil {
-		log.Fatal(err)
-	}
+	metrics, _ := Consumer.ReadEvent()
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 	switch strings.ToLower(metrics.MType) {
 	case "gauge":
 		m.Gaugemem[metrics.ID] = Gauge(*metrics.Value)

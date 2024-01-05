@@ -30,7 +30,7 @@ func NewProducer(fileName string) (*Producer, error) {
 		return nil, err
 	}
 	if !exist {
-		if err := os.MkdirAll(filepath.Dir(fileName), 0770); err != nil {
+		if err := os.MkdirAll(filepath.Dir(fileName), 0777); err != nil {
 			return nil, err
 		}
 	}
@@ -66,7 +66,7 @@ func NewConsumer(fileName string) (*Consumer, error) {
 		return nil, err
 	}
 	if !exist {
-		if err := os.MkdirAll(filepath.Dir(fileName), 0770); err != nil {
+		if err := os.MkdirAll(filepath.Dir(fileName), 0777); err != nil {
 			return nil, err
 		}
 	}
