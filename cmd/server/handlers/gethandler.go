@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"flag"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -83,7 +84,7 @@ func ParseFlagsAndENV() storage.Flags {
 	if len(envcfg.Address) > 0 {
 		Flag.FlagAddr = envcfg.Address
 	}
-
+	fmt.Println(envcfg.FileStorage)
 	if len(envcfg.FileStorage) > 0 {
 		Flag.FlagFileStorage = envcfg.FileStorage
 	}
