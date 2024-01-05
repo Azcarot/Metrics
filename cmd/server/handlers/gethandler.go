@@ -69,7 +69,7 @@ func (st *StorageHandler) HandlePostMetrics() http.Handler {
 
 func ParseFlagsAndENV() storage.Flags {
 	flag.StringVar(&Flag.FlagAddr, "a", "localhost:8080", "address and port to run server")
-	flag.StringVar(&Flag.FlagFileStorage, "f", "/tmp/metrics-db.json", "address of a file-storage")
+	flag.StringVar(&Flag.FlagFileStorage, "f", "metrics-db.json", "address of a file-storage")
 	flag.IntVar(&Flag.FlagStoreInterval, "i", 300, "interval for storing data")
 	flag.BoolVar(&Flag.FlagRestore, "r", true, "reading data from file first")
 	flag.Parse()

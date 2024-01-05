@@ -63,7 +63,7 @@ func fileOrPathExists(path string) (bool, error) {
 
 func NewConsumer(fileName string) (*Consumer, error) {
 	exist, err := fileOrPathExists(fileName)
-	fmt.Println("EXIST ", exist, " err ", err)
+
 	if err != nil {
 		return nil, err
 	}
@@ -73,6 +73,7 @@ func NewConsumer(fileName string) (*Consumer, error) {
 		}
 	}
 	file, err := os.OpenFile(fileName, os.O_RDONLY|os.O_CREATE, 0777)
+	fmt.Println("EXIST ", file, " err ", err)
 	if err != nil {
 		return nil, err
 	}
