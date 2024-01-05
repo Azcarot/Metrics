@@ -105,9 +105,10 @@ func MakeRouter(flag storage.Flags) *chi.Mux {
 		Storage: &storage.MemStorage{
 			Gaugemem: make(map[string]storage.Gauge), Countermem: make(map[string]storage.Counter)},
 	}
-	// if flag.FlagRestore && len(flag.FlagFileStorage) > 0 {
-	// 	storagehandler.Storage.ReadMetricsFromFile(flag.FlagFileStorage)
-	// }
+
+	if flag.FlagRestore && len(flag.FlagFileStorage) > 0 {
+		storagehandler.Storage.ReadMetricsFromFile(flag.FlagFileStorage)
+	}
 	logger, err := zap.NewDevelopment()
 	if err != nil {
 		// вызываем панику, если ошибка
