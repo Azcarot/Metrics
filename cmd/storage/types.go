@@ -70,7 +70,6 @@ func (m *MemStorage) ReadMetricsFromFile(filename string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	println(metrics)
 	switch strings.ToLower(metrics.MType) {
 	case "gauge":
 		m.Gaugemem[metrics.ID] = Gauge(*metrics.Value)
