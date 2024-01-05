@@ -70,12 +70,14 @@ func (m *MemStorage) ReadMetricsFromFile(filename string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	switch strings.ToLower(metrics.MType) {
-	case "gauge":
-		m.Gaugemem[metrics.ID] = Gauge(*metrics.Value)
-	case "counter":
-		m.Countermem[metrics.ID] = Counter(*metrics.Delta)
+	if len(metrics.MType) > 0 {
+		switch strings.ToLower(metrics.MType) {
+		case "gauge":
+			m.Gaugemem[metrics.ID] = Gauge(*metrics.Value)
+		case "counter":
+			m.Countermem[metrics.ID] = Counter(*metrics.Delta)
 
+		}
 	}
 
 }
