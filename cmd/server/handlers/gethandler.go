@@ -89,8 +89,9 @@ func ParseFlagsAndENV() storage.Flags {
 		Flag.FlagFileStorage = envcfg.FileStorage
 	}
 	_, restore := os.LookupEnv("RESTORE")
-	fmt.Println("Restore ", restore, " ", envcfg.Restore)
+
 	if !envcfg.Restore && restore {
+		fmt.Println("Restore ", restore, " ", envcfg.Restore)
 		Flag.FlagRestore = envcfg.Restore
 	}
 	if len(envcfg.StoreInterval) == 0 {
