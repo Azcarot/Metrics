@@ -5,7 +5,6 @@ import (
 	"compress/gzip"
 	"encoding/json"
 	"io"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -72,7 +71,7 @@ func (st *StorageHandler) HandleJSONPostMetrics(flag storage.Flags) http.Handler
 			}
 			if len(flag.FlagFileStorage) != 0 && flag.FlagStoreInterval == 0 {
 				fileName := flag.FlagFileStorage
-				WriteToFile(fileName, metricData)
+				storage.WriteToFile(fileName, metricData)
 			}
 			result, err := st.Storage.GetStoredMetrics(metricData.ID, strings.ToLower(metricData.MType))
 
@@ -98,7 +97,7 @@ func (st *StorageHandler) HandleJSONPostMetrics(flag storage.Flags) http.Handler
 			}
 			if len(flag.FlagFileStorage) != 0 && flag.FlagStoreInterval == 0 {
 				fileName := flag.FlagFileStorage
-				WriteToFile(fileName, metricData)
+				storage.WriteToFile(fileName, metricData)
 			}
 			result, err := st.Storage.GetStoredMetrics(metricData.ID, strings.ToLower(metricData.MType))
 
@@ -130,17 +129,6 @@ func (st *StorageHandler) HandleJSONPostMetrics(flag storage.Flags) http.Handler
 	}
 
 	return http.HandlerFunc(postMetric)
-}
-
-func WriteToFile(f string, mdata storage.Metrics) {
-	Producer, err := storage.NewProducer(f)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer Producer.Close()
-	if err := Producer.WriteEvent(&mdata); err != nil {
-		log.Fatal(err)
-	}
 }
 
 func (st *StorageHandler) HandleJSONGetMetrics() http.Handler {

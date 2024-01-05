@@ -2,10 +2,12 @@ package storage
 
 import (
 	"errors"
-	"fmt"
 	"log"
+	"os"
+	"os/signal"
 	"strconv"
 	"strings"
+	"syscall"
 )
 
 const GuageType = "gauge"
@@ -41,6 +43,7 @@ type MemInteractions interface {
 	GetAllMetrics() string
 	ReadMetricsFromFile(string)
 	GetAllMetricsAsMetricType() []Metrics
+	ShutdownSave(Flags)
 }
 
 func (m *MemStorage) StoreMetrics(n string, t string, v string) error {
@@ -71,7 +74,6 @@ func (m *MemStorage) ReadMetricsFromFile(filename string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(metrics)
 	for _, metric := range *metrics {
 		if len(metric.MType) > 0 {
 			switch strings.ToLower(metric.MType) {
@@ -86,11 +88,62 @@ func (m *MemStorage) ReadMetricsFromFile(filename string) {
 
 }
 
+func (m *MemStorage) ShutdownSave(flag Flags) {
+
+	terminateSignals := make(chan os.Signal, 1)
+
+	signal.Notify(terminateSignals, syscall.SIGINT, syscall.SIGTERM) //NOTE:: syscall.SIGKILL we cannot catch kill -9 as its force kill signal.
+
+	_, ok := <-terminateSignals
+	if ok && len(flag.FlagFileStorage) != 0 {
+
+		var FinalData []Metrics
+
+		for n, v := range m.Gaugemem {
+			var data Metrics
+
+			data.ID = n
+
+			value := float64(v)
+			data.Value = &value
+
+			data.MType = "gauge"
+			FinalData = append(FinalData, data)
+		}
+
+		for n, v := range m.Countermem {
+			var data Metrics
+			data.ID = n
+			delta := int64(v)
+			data.Delta = &delta
+			data.MType = "counter"
+			FinalData = append(FinalData, data)
+		}
+		for _, metric := range FinalData {
+			WriteToFile(flag.FlagFileStorage, metric)
+		}
+		syscall.ExitProcess(1)
+	}
+
+}
+
+func WriteToFile(f string, mdata Metrics) {
+	Producer, err := NewProducer(f)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer Producer.Close()
+	if err := Producer.WriteEvent(&mdata); err != nil {
+		log.Fatal(err)
+	}
+}
+
 func (m *MemStorage) GetAllMetricsAsMetricType() []Metrics {
 	var FinalData []Metrics
 	for n, v := range m.Gaugemem {
 		var data Metrics
 		data.ID = n
+
 		*data.Value = float64(v)
 		data.MType = "gauge"
 		FinalData = append(FinalData, data)

@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"flag"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -84,7 +83,7 @@ func ParseFlagsAndENV() storage.Flags {
 	if len(envcfg.Address) > 0 {
 		Flag.FlagAddr = envcfg.Address
 	}
-	fmt.Println(envcfg.FileStorage)
+
 	if len(envcfg.FileStorage) > 0 {
 		Flag.FlagFileStorage = envcfg.FileStorage
 	}
@@ -109,6 +108,7 @@ func MakeRouter(flag storage.Flags) *chi.Mux {
 		Storage: &storage.MemStorage{
 			Gaugemem: make(map[string]storage.Gauge), Countermem: make(map[string]storage.Counter)},
 	}
+	go storagehandler.Storage.ShutdownSave(flag)
 	if flag.FlagRestore && len(flag.FlagFileStorage) > 0 {
 		storagehandler.Storage.ReadMetricsFromFile(flag.FlagFileStorage)
 	}
@@ -125,7 +125,7 @@ func MakeRouter(flag storage.Flags) *chi.Mux {
 				<-reporttimer
 				fullMetrics := storagehandler.Storage.GetAllMetricsAsMetricType()
 				for _, data := range fullMetrics {
-					WriteToFile(name, data)
+					storage.WriteToFile(name, data)
 				}
 			}
 		}(flag.FlagFileStorage)
