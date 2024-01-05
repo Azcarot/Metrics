@@ -94,7 +94,6 @@ func ParseFlagsAndENV() storage.Flags {
 			Flag.FlagRestore = envrestore
 		}
 	}
-
 	if len(envcfg.StoreInterval) == 0 {
 		storeInterval, err := strconv.Atoi(envcfg.StoreInterval)
 		if err == nil {

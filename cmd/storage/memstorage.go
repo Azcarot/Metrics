@@ -2,6 +2,7 @@ package storage
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"strconv"
 	"strings"
@@ -70,13 +71,16 @@ func (m *MemStorage) ReadMetricsFromFile(filename string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	if len(metrics.MType) > 0 {
-		switch strings.ToLower(metrics.MType) {
-		case "gauge":
-			m.Gaugemem[metrics.ID] = Gauge(*metrics.Value)
-		case "counter":
-			m.Countermem[metrics.ID] = Counter(*metrics.Delta)
+	fmt.Println(metrics)
+	for _, metric := range *metrics {
+		if len(metric.MType) > 0 {
+			switch strings.ToLower(metric.MType) {
+			case "gauge":
+				m.Gaugemem[metric.ID] = Gauge(*metric.Value)
+			case "counter":
+				m.Countermem[metric.ID] = Counter(*metric.Delta)
 
+			}
 		}
 	}
 

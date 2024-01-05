@@ -1,8 +1,9 @@
 package storage
 
 import (
+	"bufio"
 	"encoding/json"
-	"io"
+	"log"
 	"os"
 	"path/filepath"
 )
@@ -83,11 +84,20 @@ func NewConsumer(fileName string) (*Consumer, error) {
 	}, nil
 }
 
-func (c *Consumer) ReadEvent() (*Metrics, error) {
-	event := &Metrics{}
-	if err := c.decoder.Decode(&event); err != nil && err != io.EOF {
-		return nil, err
-	}
+func (c *Consumer) ReadEvent() (*[]Metrics, error) {
+	scanner := bufio.NewScanner(c.file)
+	var result []Metrics
+	for scanner.Scan() {
+		event := &Metrics{}
+		if err := scanner.Err(); err != nil {
+			log.Fatal(err)
+		}
+		err := json.Unmarshal([]byte(scanner.Text()), &event)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, *event)
 
-	return event, nil
+	}
+	return &result, nil
 }
