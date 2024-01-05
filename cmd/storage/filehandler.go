@@ -1,8 +1,9 @@
-package types
+package storage
 
 import (
 	"encoding/json"
 	"os"
+	"path/filepath"
 )
 
 type Producer struct {
@@ -24,7 +25,16 @@ func (c *Consumer) Close() error {
 }
 
 func NewProducer(fileName string) (*Producer, error) {
-	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+	exist, err := fileOrPathExists(fileName)
+	if err != nil {
+		return nil, err
+	}
+	if !exist {
+		if err := os.MkdirAll(filepath.Dir(fileName), 0770); err != nil {
+			return nil, err
+		}
+	}
+	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
 	if err != nil {
 		return nil, err
 	}
@@ -39,8 +49,28 @@ func (p *Producer) WriteEvent(event *Metrics) error {
 	return p.encoder.Encode(&event)
 }
 
+func fileOrPathExists(path string) (bool, error) {
+	_, err := os.Stat(path)
+	if err == nil {
+		return true, nil
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return false, err
+}
+
 func NewConsumer(fileName string) (*Consumer, error) {
-	file, err := os.OpenFile(fileName, os.O_RDONLY|os.O_CREATE, 0666)
+	exist, err := fileOrPathExists(fileName)
+	if err != nil {
+		return nil, err
+	}
+	if !exist {
+		if err := os.MkdirAll(filepath.Dir(fileName), 0770); err != nil {
+			return nil, err
+		}
+	}
+	file, err := os.OpenFile(fileName, os.O_RDONLY|os.O_CREATE, 0777)
 	if err != nil {
 		return nil, err
 	}
@@ -51,8 +81,8 @@ func NewConsumer(fileName string) (*Consumer, error) {
 	}, nil
 }
 
-func (c *Consumer) ReadEvent() (*[]Metrics, error) {
-	event := &[]Metrics{}
+func (c *Consumer) ReadEvent() (*Metrics, error) {
+	event := &Metrics{}
 	if err := c.decoder.Decode(&event); err != nil {
 		return nil, err
 	}

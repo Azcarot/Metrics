@@ -1,4 +1,4 @@
-package types
+package storage
 
 import (
 	"errors"
@@ -70,15 +70,15 @@ func (m *MemStorage) ReadMetricsFromFile(filename string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	for _, metric := range *metrics {
-		switch strings.ToLower(metric.MType) {
-		case "gauge":
-			m.Gaugemem[metric.ID] = Gauge(*metric.Value)
-		case "counter":
-			m.Countermem[metric.ID] = Counter(*metric.Delta)
+	println(metrics)
+	switch strings.ToLower(metrics.MType) {
+	case "gauge":
+		m.Gaugemem[metrics.ID] = Gauge(*metrics.Value)
+	case "counter":
+		m.Countermem[metrics.ID] = Counter(*metrics.Delta)
 
-		}
 	}
+
 }
 
 func (m *MemStorage) GetAllMetricsAsMetricType() []Metrics {

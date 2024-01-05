@@ -4,14 +4,13 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
 
-	"github.com/Azcarot/Metrics/cmd/types"
+	"github.com/Azcarot/Metrics/cmd/storage"
 )
 
 type gzipWriter struct {
@@ -46,9 +45,9 @@ func GzipHandler(next http.Handler) http.Handler {
 	})
 }
 
-func (st *StorageHandler) HandleJSONPostMetrics(flag types.Flags) http.Handler {
-	var metricData types.Metrics
-	var metricResult types.Metrics
+func (st *StorageHandler) HandleJSONPostMetrics(flag storage.Flags) http.Handler {
+	var metricData storage.Metrics
+	var metricResult storage.Metrics
 
 	postMetric := func(res http.ResponseWriter, req *http.Request) {
 		var buf bytes.Buffer
@@ -64,14 +63,14 @@ func (st *StorageHandler) HandleJSONPostMetrics(flag types.Flags) http.Handler {
 		}
 
 		switch metricData.MType {
-		case types.CounterType:
+		case storage.CounterType:
 			value := strconv.Itoa(int(*metricData.Delta))
 			err := st.Storage.StoreMetrics(metricData.ID, strings.ToLower(metricData.MType), value)
 			if err != nil {
 				res.WriteHeader(http.StatusBadRequest)
 				return
 			}
-			if len(flag.FlagFileStorage) != 0 {
+			if len(flag.FlagFileStorage) != 0 && flag.FlagStoreInterval == 0 {
 				fileName := flag.FlagFileStorage
 				WriteToFile(fileName, metricData)
 			}
@@ -89,7 +88,7 @@ func (st *StorageHandler) HandleJSONPostMetrics(flag types.Flags) http.Handler {
 			metricData.Delta = &newvalue
 			metricResult = metricData
 
-		case types.GuageType:
+		case storage.GuageType:
 			value := strconv.FormatFloat(float64(*metricData.Value), 'g', -1, 64)
 
 			err := st.Storage.StoreMetrics(metricData.ID, strings.ToLower(metricData.MType), value)
@@ -97,7 +96,7 @@ func (st *StorageHandler) HandleJSONPostMetrics(flag types.Flags) http.Handler {
 				res.WriteHeader(http.StatusBadRequest)
 				return
 			}
-			if len(flag.FlagFileStorage) != 0 {
+			if len(flag.FlagFileStorage) != 0 && flag.FlagStoreInterval == 0 {
 				fileName := flag.FlagFileStorage
 				WriteToFile(fileName, metricData)
 			}
@@ -125,7 +124,7 @@ func (st *StorageHandler) HandleJSONPostMetrics(flag types.Flags) http.Handler {
 			res.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		res.Header().Set("Content-Type", types.JSONContentType)
+		res.Header().Set("Content-Type", storage.JSONContentType)
 		res.WriteHeader(http.StatusOK)
 		res.Write(resp)
 	}
@@ -133,8 +132,8 @@ func (st *StorageHandler) HandleJSONPostMetrics(flag types.Flags) http.Handler {
 	return http.HandlerFunc(postMetric)
 }
 
-func WriteToFile(f string, mdata types.Metrics) {
-	Producer, err := types.NewProducer(f)
+func WriteToFile(f string, mdata storage.Metrics) {
+	Producer, err := storage.NewProducer(f)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -147,7 +146,7 @@ func WriteToFile(f string, mdata types.Metrics) {
 func (st *StorageHandler) HandleJSONGetMetrics() http.Handler {
 
 	getMetric := func(res http.ResponseWriter, req *http.Request) {
-		var metric types.Metrics
+		var metric storage.Metrics
 		var buf bytes.Buffer
 		// переменная reader будет равна r.Body или *gzip.Reader
 
@@ -162,13 +161,12 @@ func (st *StorageHandler) HandleJSONGetMetrics() http.Handler {
 		}
 		if len(metric.MType) > 0 && len(metric.ID) > 0 {
 			result, err := st.Storage.GetStoredMetrics(metric.ID, strings.ToLower(metric.MType))
-			res.Header().Add("Content-Type", types.JSONContentType)
+			res.Header().Add("Content-Type", storage.JSONContentType)
 			if err != nil {
 				res.WriteHeader(http.StatusNotFound)
 			} else {
-				fmt.Println("Type ", metric.MType, " Name ", metric.ID)
 				switch metric.MType {
-				case types.CounterType:
+				case storage.CounterType:
 					value, err := strconv.ParseInt(result, 0, 64)
 					if err != nil {
 						res.WriteHeader(http.StatusBadRequest)
@@ -181,7 +179,7 @@ func (st *StorageHandler) HandleJSONGetMetrics() http.Handler {
 						return
 					}
 					res.Write(resp)
-				case types.GuageType:
+				case storage.GuageType:
 					value, err := strconv.ParseFloat(result, 64)
 					if err != nil {
 						res.WriteHeader(http.StatusBadRequest)
@@ -200,7 +198,7 @@ func (st *StorageHandler) HandleJSONGetMetrics() http.Handler {
 				}
 			}
 		} else {
-			res.Header().Add("Content-Type", types.JSONContentType)
+			res.Header().Add("Content-Type", storage.JSONContentType)
 		}
 	}
 	return http.HandlerFunc(getMetric)

@@ -8,12 +8,12 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/Azcarot/Metrics/cmd/types"
+	"github.com/Azcarot/Metrics/cmd/storage"
 )
 
-func MakeJSON(m types.MemStorage) [][]byte {
+func MakeJSON(m storage.MemStorage) [][]byte {
 	var body [][]byte
-	var metric types.Metrics
+	var metric storage.Metrics
 	for name, value := range m.Gaugemem {
 		newvalue := float64(value)
 		metric.ID = name
@@ -55,7 +55,7 @@ func GzipForAgent(b []byte) []byte {
 	return b
 }
 
-func Makepath(m types.MemStorage, a string) []string {
+func Makepath(m storage.MemStorage, a string) []string {
 	var path []string
 	pathscount := 0
 	for name, value := range m.Gaugemem {
@@ -76,7 +76,7 @@ func PostJSONMetrics(b []byte, a string) *http.Response {
 	if err != nil {
 		panic(fmt.Sprintf("cannot post %s ", b))
 	}
-	resp.Header.Add("Content-Type", types.JSONContentType)
+	resp.Header.Add("Content-Type", storage.JSONContentType)
 	resp.Header.Add("Content-Encoding", "gzip")
 	client := &http.Client{}
 	res, _ := client.Do(resp)

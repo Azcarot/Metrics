@@ -6,17 +6,17 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/Azcarot/Metrics/cmd/types"
+	"github.com/Azcarot/Metrics/cmd/storage"
 )
 
 func TestGetMetrics(t *testing.T) {
 	type args struct {
-		m types.MemStorage
+		m storage.MemStorage
 	}
 	tests := struct {
 		name string
 		args args
-		want types.Counter
+		want storage.Counter
 	}{
 		name: "testcounter",
 		args: args{},

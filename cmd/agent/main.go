@@ -7,7 +7,7 @@ import (
 
 	"github.com/Azcarot/Metrics/cmd/agent/measure"
 	"github.com/Azcarot/Metrics/cmd/server/handlers"
-	"github.com/Azcarot/Metrics/cmd/types"
+	"github.com/Azcarot/Metrics/cmd/storage"
 	"github.com/caarlos0/env/v10"
 )
 
@@ -63,7 +63,7 @@ func setValues() {
 
 func main() {
 	setValues()
-	var metric types.MemStorage
+	var metric storage.MemStorage
 	sleeptime := time.Duration(agentData.pollint) * time.Second
 	reporttime := time.Duration(agentData.reportint) * time.Second
 	reporttimer := time.After(reporttime)

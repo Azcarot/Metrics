@@ -5,18 +5,19 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/Azcarot/Metrics/cmd/types"
+	"github.com/Azcarot/Metrics/cmd/storage"
 	"github.com/caarlos0/env/v6"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 )
 
 var sugar zap.SugaredLogger
-var Flag types.Flags
+var Flag storage.Flags
 
 type (
 	// берём структуру для хранения сведений об ответе
@@ -52,7 +53,7 @@ func (st *StorageHandler) HandlePostMetrics() http.Handler {
 			return
 		}
 		switch strings.ToLower(chi.URLParam(req, "type")) {
-		case types.CounterType, types.GuageType:
+		case storage.CounterType, storage.GuageType:
 			err := st.Storage.StoreMetrics(chi.URLParam(req, "name"), strings.ToLower(chi.URLParam(req, "type")), chi.URLParam(req, "value"))
 			if err != nil {
 				res.WriteHeader(http.StatusBadRequest)
@@ -67,28 +68,31 @@ func (st *StorageHandler) HandlePostMetrics() http.Handler {
 	return http.HandlerFunc(postMetric)
 }
 
-func ParseFlagsAndENV() types.Flags {
+func ParseFlagsAndENV() storage.Flags {
 	flag.StringVar(&Flag.FlagAddr, "a", "localhost:8080", "address and port to run server")
 	flag.StringVar(&Flag.FlagFileStorage, "f", "/tmp/metrics-db.json", "address of a file-storage")
 	flag.IntVar(&Flag.FlagStoreInterval, "i", 300, "interval for storing data")
 	flag.BoolVar(&Flag.FlagRestore, "r", true, "reading data from file first")
 	flag.Parse()
-	var envcfg types.ServerENV
+	var envcfg storage.ServerENV
 	err := env.Parse(&envcfg)
 	if err != nil {
 		log.Fatal(err)
 	}
-	if envcfg.Address != "" {
+	_, addressENV := os.LookupEnv("ADDRESS")
+	if addressENV {
 		Flag.FlagAddr = envcfg.Address
 	}
-	if envcfg.FileStorage != "" {
+	_, fileADDRENV := os.LookupEnv("FILE_STORAGE_PATH")
+	if fileADDRENV {
 		Flag.FlagFileStorage = envcfg.FileStorage
 	}
-	if (envcfg.Restore) || !envcfg.Restore {
+	restore, present := os.LookupEnv("RESTORE")
+	if present && len(restore) > 0 {
 		Flag.FlagRestore = envcfg.Restore
 	}
 	if len(envcfg.StoreInterval) == 0 {
-		storeInterval, err := strconv.Atoi(envcfg.FileStorage)
+		storeInterval, err := strconv.Atoi(envcfg.StoreInterval)
 		if err == nil {
 			Flag.FlagStoreInterval = storeInterval
 		}
@@ -96,12 +100,13 @@ func ParseFlagsAndENV() types.Flags {
 	return Flag
 }
 
-func MakeRouter(flag types.Flags) *chi.Mux {
+func MakeRouter(flag storage.Flags) *chi.Mux {
 	storagehandler := StorageHandler{
-		Storage: &types.MemStorage{
-			Gaugemem: make(map[string]types.Gauge), Countermem: make(map[string]types.Counter)},
+		Storage: &storage.MemStorage{
+			Gaugemem: make(map[string]storage.Gauge), Countermem: make(map[string]storage.Counter)},
 	}
 	if flag.FlagRestore && len(flag.FlagFileStorage) > 0 {
+		println("Пробуем\n")
 		storagehandler.Storage.ReadMetricsFromFile(flag.FlagFileStorage)
 	}
 	logger, err := zap.NewDevelopment()
@@ -117,7 +122,7 @@ func MakeRouter(flag types.Flags) *chi.Mux {
 				<-reporttimer
 				fullMetrics := storagehandler.Storage.GetAllMetricsAsMetricType()
 				for _, data := range fullMetrics {
-					WriteToFile(flag.FlagFileStorage, data)
+					WriteToFile(name, data)
 				}
 			}
 		}(flag.FlagFileStorage)
@@ -128,7 +133,7 @@ func MakeRouter(flag types.Flags) *chi.Mux {
 	r := chi.NewRouter()
 	r.Use()
 	r.Route("/", func(r chi.Router) {
-		r.Get("/", WithLogging(GzipHandler(storagehandler.HandleGetAllMetrics(flag))).ServeHTTP)
+		r.Get("/", WithLogging(GzipHandler(storagehandler.HandleGetAllMetrics())).ServeHTTP)
 		r.Post("/update/", WithLogging(GzipHandler(storagehandler.HandleJSONPostMetrics(flag))).ServeHTTP)
 		r.Post("/value/", WithLogging(GzipHandler(storagehandler.HandleJSONGetMetrics())).ServeHTTP)
 		r.Post("/update/{type}/{name}/{value}", WithLogging(GzipHandler(storagehandler.HandlePostMetrics())).ServeHTTP)
@@ -138,7 +143,7 @@ func MakeRouter(flag types.Flags) *chi.Mux {
 }
 
 type StorageHandler struct {
-	Storage types.MemInteractions
+	Storage storage.MemInteractions
 }
 
 // WithLogging добавляет дополнительный код для регистрации сведений о запросе
@@ -186,7 +191,7 @@ func (st *StorageHandler) HandleGetMetrics() http.Handler {
 	return http.HandlerFunc(getMetric)
 }
 
-func (st *StorageHandler) HandleGetAllMetrics(flag types.Flags) http.Handler {
+func (st *StorageHandler) HandleGetAllMetrics() http.Handler {
 	getMetrics := func(res http.ResponseWriter, req *http.Request) {
 		result := st.Storage.GetAllMetrics()
 		res.Header().Set("Content-Type", "text/html")
