@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -86,10 +87,14 @@ func ParseFlagsAndENV() storage.Flags {
 	if len(envcfg.FileStorage) > 0 {
 		Flag.FlagFileStorage = envcfg.FileStorage
 	}
-
-	if !envcfg.Restore {
-		Flag.FlagRestore = envcfg.Restore
+	restore := os.Getenv("RESTORE")
+	if len(restore) > 0 {
+		envrestore, err := strconv.ParseBool(restore)
+		if err != nil {
+			Flag.FlagRestore = envrestore
+		}
 	}
+
 	if len(envcfg.StoreInterval) == 0 {
 		storeInterval, err := strconv.Atoi(envcfg.StoreInterval)
 		if err == nil {
@@ -104,7 +109,6 @@ func MakeRouter(flag storage.Flags) *chi.Mux {
 		Storage: &storage.MemStorage{
 			Gaugemem: make(map[string]storage.Gauge), Countermem: make(map[string]storage.Counter)},
 	}
-
 	if flag.FlagRestore && len(flag.FlagFileStorage) > 0 {
 		storagehandler.Storage.ReadMetricsFromFile(flag.FlagFileStorage)
 	}
