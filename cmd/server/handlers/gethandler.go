@@ -2,11 +2,9 @@ package handlers
 
 import (
 	"flag"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -80,18 +78,16 @@ func ParseFlagsAndENV() storage.Flags {
 	if err != nil {
 		log.Fatal(err)
 	}
-	_, addressENV := os.LookupEnv("ADDRESS")
-	if addressENV {
+
+	if len(envcfg.Address) > 0 {
 		Flag.FlagAddr = envcfg.Address
 	}
-	_, fileADDRENV := os.LookupEnv("FILE_STORAGE_PATH")
-	if fileADDRENV {
+
+	if len(envcfg.FileStorage) > 0 {
 		Flag.FlagFileStorage = envcfg.FileStorage
 	}
-	_, restore := os.LookupEnv("RESTORE")
 
-	if !envcfg.Restore && restore {
-		fmt.Println("Restore ", restore, " ", envcfg.Restore)
+	if !envcfg.Restore {
 		Flag.FlagRestore = envcfg.Restore
 	}
 	if len(envcfg.StoreInterval) == 0 {
