@@ -2,6 +2,7 @@ package storage
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 )
@@ -62,6 +63,7 @@ func fileOrPathExists(path string) (bool, error) {
 
 func NewConsumer(fileName string) (*Consumer, error) {
 	exist, err := fileOrPathExists(fileName)
+	fmt.Println("EXIST ", exist, " err ", err)
 	if err != nil {
 		return nil, err
 	}
