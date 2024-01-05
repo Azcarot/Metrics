@@ -78,8 +78,8 @@ func ParseFlagsAndENV() types.Flags {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	if len(envcfg.Address) > 0 {
+	println(envcfg.Address)
+	if envcfg.Address != "" {
 		Flag.FlagAddr = envcfg.Address
 	}
 	if envcfg.FileStorage != "" {
@@ -123,6 +123,7 @@ func MakeRouter(flag types.Flags) *chi.Mux {
 			}
 		}(flag.FlagFileStorage)
 	}
+	println(flag.FlagAddr)
 	defer logger.Sync()
 	// делаем регистратор SugaredLogger
 	sugar = *logger.Sugar()
