@@ -2,6 +2,7 @@ package storage
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 )
@@ -85,6 +86,7 @@ func NewConsumer(fileName string) (*Consumer, error) {
 func (c *Consumer) ReadEvent() (*Metrics, error) {
 	event := &Metrics{}
 	if err := c.decoder.Decode(&event); err != nil {
+		fmt.Println("ERROR HERE!!", err)
 		return nil, err
 	}
 
