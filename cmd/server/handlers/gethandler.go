@@ -78,7 +78,6 @@ func ParseFlagsAndENV() types.Flags {
 	if err != nil {
 		log.Fatal(err)
 	}
-	println(envcfg.Address)
 	if envcfg.Address != "" {
 		Flag.FlagAddr = envcfg.Address
 	}
