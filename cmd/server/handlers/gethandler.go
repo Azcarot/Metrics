@@ -69,7 +69,7 @@ func (st *StorageHandler) HandlePostMetrics() http.Handler {
 
 func ParseFlagsAndENV() storage.Flags {
 	flag.StringVar(&Flag.FlagAddr, "a", "localhost:8080", "address and port to run server")
-	flag.StringVar(&Flag.FlagFileStorage, "f", "metrics-db.json", "address of a file-storage")
+	flag.StringVar(&Flag.FlagFileStorage, "f", "/tmp/metrics-db.json", "address of a file-storage")
 	flag.IntVar(&Flag.FlagStoreInterval, "i", 300, "interval for storing data")
 	flag.BoolVar(&Flag.FlagRestore, "r", true, "reading data from file first")
 	flag.Parse()
@@ -105,9 +105,9 @@ func MakeRouter(flag storage.Flags) *chi.Mux {
 			Gaugemem: make(map[string]storage.Gauge), Countermem: make(map[string]storage.Counter)},
 	}
 
-	if flag.FlagRestore && len(flag.FlagFileStorage) > 0 {
-		storagehandler.Storage.ReadMetricsFromFile(flag.FlagFileStorage)
-	}
+	// if flag.FlagRestore && len(flag.FlagFileStorage) > 0 {
+	// 	storagehandler.Storage.ReadMetricsFromFile(flag.FlagFileStorage)
+	// }
 	logger, err := zap.NewDevelopment()
 	if err != nil {
 		// вызываем панику, если ошибка

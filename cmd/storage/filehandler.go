@@ -2,7 +2,6 @@ package storage
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"path/filepath"
 )
@@ -73,7 +72,6 @@ func NewConsumer(fileName string) (*Consumer, error) {
 		}
 	}
 	file, err := os.OpenFile(fileName, os.O_RDONLY|os.O_CREATE, 0777)
-	fmt.Println("EXIST ", file, " err ", err)
 	if err != nil {
 		return nil, err
 	}
