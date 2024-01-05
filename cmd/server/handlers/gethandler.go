@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"flag"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -88,6 +89,7 @@ func ParseFlagsAndENV() storage.Flags {
 		Flag.FlagFileStorage = envcfg.FileStorage
 	}
 	restore, present := os.LookupEnv("RESTORE")
+	fmt.Println("restore \n", restore)
 	if present && len(restore) > 0 {
 		Flag.FlagRestore = envcfg.Restore
 	}
