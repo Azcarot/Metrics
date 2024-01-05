@@ -110,19 +110,19 @@ func MakeRouter(flag types.Flags) *chi.Mux {
 		// вызываем панику, если ошибка
 		panic(err)
 	}
-	// if flag.FlagStoreInterval > 0 && len(flag.FlagFileStorage) > 0 {
-	// 	go func(name string) {
-	// 		reporttime := time.Duration(flag.FlagStoreInterval) * time.Second
-	// 		reporttimer := time.After(reporttime)
-	// 		for {
-	// 			<-reporttimer
-	// 			fullMetrics := storagehandler.Storage.GetAllMetricsAsMetricType()
-	// 			for _, data := range fullMetrics {
-	// 				WriteToFile(flag.FlagFileStorage, data)
-	// 			}
-	// 		}
-	// 	}(flag.FlagFileStorage)
-	// }
+	if flag.FlagStoreInterval > 0 && len(flag.FlagFileStorage) > 0 {
+		go func(name string) {
+			reporttime := time.Duration(flag.FlagStoreInterval) * time.Second
+			reporttimer := time.After(reporttime)
+			for {
+				<-reporttimer
+				fullMetrics := storagehandler.Storage.GetAllMetricsAsMetricType()
+				for _, data := range fullMetrics {
+					WriteToFile(flag.FlagFileStorage, data)
+				}
+			}
+		}(flag.FlagFileStorage)
+	}
 	defer logger.Sync()
 	// делаем регистратор SugaredLogger
 	sugar = *logger.Sugar()
