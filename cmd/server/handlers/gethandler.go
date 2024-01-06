@@ -119,6 +119,7 @@ func MakeRouter(flag storage.Flags) *chi.Mux {
 	}
 
 	if flag.FlagRestore && len(flag.FlagFileStorage) > 0 {
+
 		storagehandler.Storage.ReadMetricsFromFile(flag.FlagFileStorage)
 	}
 	logger, err := zap.NewDevelopment()

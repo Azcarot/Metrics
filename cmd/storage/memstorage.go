@@ -22,6 +22,8 @@ type MemStorage struct {
 	Countermem map[string]Counter
 }
 
+var storedData MemStorage
+
 type Flags struct {
 	FlagAddr          string
 	FlagStoreInterval int
@@ -56,17 +58,21 @@ func (m *MemStorage) StoreMetrics(n string, t string, v string) error {
 			return err
 		}
 		m.Gaugemem[n] = Gauge(value)
+		storedData.Gaugemem[n] = Gauge(value)
 	case CounterType:
 		value, err := strconv.Atoi(v)
 		if err != nil {
 			return err
 		}
 		m.Countermem[n] += Counter(value)
+		storedData.Countermem[n] += Counter(value)
 	}
 	return nil
 }
 
 func (m *MemStorage) ReadMetricsFromFile(filename string) {
+	storedData.Gaugemem = make(map[string]Gauge)
+	storedData.Countermem = make(map[string]Counter)
 	Consumer, err := NewConsumer(filename)
 	if err != nil {
 		log.Fatal(err)
@@ -76,15 +82,18 @@ func (m *MemStorage) ReadMetricsFromFile(filename string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	for _, metric := range *metrics {
 		if len(metric.MType) > 0 {
 			switch strings.ToLower(metric.MType) {
 			case "gauge":
 				m.Gaugemem[metric.ID] = Gauge(*metric.Value)
+				storedData.Gaugemem[metric.ID] = Gauge(*metric.Value)
 			case "counter":
-				m.Countermem[metric.ID] = Counter(*metric.Delta)
-
+				m.Countermem[metric.ID] += Counter(*metric.Delta)
+				storedData.Countermem[metric.ID] += Counter(*metric.Delta)
 			}
+
 		}
 	}
 
@@ -179,7 +188,7 @@ func (m *MemStorage) GetStoredMetrics(n string, t string) (string, error) {
 	var err error
 	switch t {
 	case GuageType:
-		val, ok := m.Gaugemem[n]
+		val, ok := storedData.Gaugemem[n]
 
 		if ok {
 			result = strconv.FormatFloat(float64(val), 'g', -1, 64)
@@ -188,7 +197,7 @@ func (m *MemStorage) GetStoredMetrics(n string, t string) (string, error) {
 		}
 
 	case CounterType:
-		val, ok := m.Countermem[n]
+		val, ok := storedData.Countermem[n]
 		if ok {
 			result = strconv.Itoa(int(val))
 		} else {
