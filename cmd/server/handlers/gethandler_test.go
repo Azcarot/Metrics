@@ -27,7 +27,8 @@ func testRequest(t *testing.T, ts *httptest.Server, method,
 }
 
 func TestHandlePostMetrics(t *testing.T) {
-	ts := httptest.NewServer(MakeRouter())
+	flags := ParseFlagsAndENV()
+	ts := httptest.NewServer(MakeRouter(flags))
 	defer ts.Close()
 	var testTable = []struct {
 		url    string
