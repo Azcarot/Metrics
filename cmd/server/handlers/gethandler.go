@@ -18,6 +18,7 @@ import (
 
 var sugar zap.SugaredLogger
 var Flag storage.Flags
+var storagehandler StorageHandler
 
 type (
 	// берём структуру для хранения сведений об ответе
@@ -102,13 +103,21 @@ func ParseFlagsAndENV() storage.Flags {
 	}
 	return Flag
 }
-
-func MakeRouter(flag storage.Flags) *chi.Mux {
-	storagehandler := StorageHandler{
+func GetSignal(s *http.Server, f storage.Flags) {
+	storagehandler = StorageHandler{
 		Storage: &storage.MemStorage{
 			Gaugemem: make(map[string]storage.Gauge), Countermem: make(map[string]storage.Counter)},
 	}
-	go storagehandler.Storage.ShutdownSave(flag)
+
+	storagehandler.Storage.ShutdownSave(s, f)
+}
+
+func MakeRouter(flag storage.Flags) *chi.Mux {
+	storagehandler = StorageHandler{
+		Storage: &storage.MemStorage{
+			Gaugemem: make(map[string]storage.Gauge), Countermem: make(map[string]storage.Counter)},
+	}
+
 	if flag.FlagRestore && len(flag.FlagFileStorage) > 0 {
 		storagehandler.Storage.ReadMetricsFromFile(flag.FlagFileStorage)
 	}

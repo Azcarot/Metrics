@@ -1,8 +1,10 @@
 package storage
 
 import (
+	"context"
 	"errors"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
@@ -43,7 +45,7 @@ type MemInteractions interface {
 	GetAllMetrics() string
 	ReadMetricsFromFile(string)
 	GetAllMetricsAsMetricType() []Metrics
-	ShutdownSave(Flags)
+	ShutdownSave(*http.Server, Flags)
 }
 
 func (m *MemStorage) StoreMetrics(n string, t string, v string) error {
@@ -88,15 +90,15 @@ func (m *MemStorage) ReadMetricsFromFile(filename string) {
 
 }
 
-func (m *MemStorage) ShutdownSave(flag Flags) {
+func (m *MemStorage) ShutdownSave(s *http.Server, flag Flags) {
 
 	terminateSignals := make(chan os.Signal, 1)
 
 	signal.Notify(terminateSignals, syscall.SIGINT, syscall.SIGTERM) //NOTE:: syscall.SIGKILL we cannot catch kill -9 as its force kill signal.
 
 	_, ok := <-terminateSignals
-	if ok && len(flag.FlagFileStorage) != 0 {
 
+	if ok && len(flag.FlagFileStorage) != 0 {
 		var FinalData []Metrics
 
 		for n, v := range m.Gaugemem {
@@ -122,7 +124,7 @@ func (m *MemStorage) ShutdownSave(flag Flags) {
 		for _, metric := range FinalData {
 			WriteToFile(flag.FlagFileStorage, metric)
 		}
-		syscall.ExitProcess(1)
+		s.Shutdown(context.Background())
 	}
 
 }

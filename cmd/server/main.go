@@ -7,8 +7,14 @@ import (
 )
 
 func main() {
+
 	flag := handlers.ParseFlagsAndENV()
 	r := handlers.MakeRouter(flag)
-	http.ListenAndServe(flag.FlagAddr, r)
+	server := &http.Server{
+		Addr:    flag.FlagAddr,
+		Handler: r,
+	}
+	go handlers.GetSignal(server, flag)
+	server.ListenAndServe()
 
 }
