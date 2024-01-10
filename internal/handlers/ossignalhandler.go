@@ -10,7 +10,7 @@ import (
 	"github.com/Azcarot/Metrics/internal/storage"
 )
 
-func (m *StorageHandler) ShutdownSave(s *http.Server, flag storage.Flags) {
+func (st *StorageHandler) ShutdownSave(s *http.Server, flag storage.Flags) {
 	terminateSignals := make(chan os.Signal, 1)
 	signal.Notify(terminateSignals, syscall.SIGINT, syscall.SIGTERM) //NOTE:: syscall.SIGKILL we cannot catch kill -9 as its force kill signal.
 
