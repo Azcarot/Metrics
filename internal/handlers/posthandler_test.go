@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/Azcarot/Metrics/cmd/storage"
+	"github.com/Azcarot/Metrics/internal/storage"
 )
 
 func TestMakepath(t *testing.T) {

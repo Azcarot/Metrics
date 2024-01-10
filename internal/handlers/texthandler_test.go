@@ -7,6 +7,7 @@ import (
 
 	"io"
 
+	"github.com/Azcarot/Metrics/internal/serverconfigs"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -27,7 +28,7 @@ func testRequest(t *testing.T, ts *httptest.Server, method,
 }
 
 func TestHandlePostMetrics(t *testing.T) {
-	flags := ParseFlagsAndENV()
+	flags := serverconfigs.ParseFlagsAndENV()
 	ts := httptest.NewServer(MakeRouter(flags))
 	defer ts.Close()
 	var testTable = []struct {

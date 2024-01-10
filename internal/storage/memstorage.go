@@ -1,15 +1,10 @@
 package storage
 
 import (
-	"context"
 	"errors"
 	"log"
-	"net/http"
-	"os"
-	"os/signal"
 	"strconv"
 	"strings"
-	"syscall"
 )
 
 const GuageType = "gauge"
@@ -47,10 +42,9 @@ type MemInteractions interface {
 	GetAllMetrics() string
 	ReadMetricsFromFile(string)
 	GetAllMetricsAsMetricType() []Metrics
-	ShutdownSave(*http.Server, Flags)
 }
 
-func (m *MemStorage) StoreMetrics(n string, t string, v string) error {
+func (m *MemStorage) StoreMetrics(n, t, v string) error {
 	switch t {
 	case GuageType:
 		value, err := strconv.ParseFloat(v, 64)
@@ -99,45 +93,6 @@ func (m *MemStorage) ReadMetricsFromFile(filename string) {
 
 }
 
-func (m *MemStorage) ShutdownSave(s *http.Server, flag Flags) {
-
-	terminateSignals := make(chan os.Signal, 1)
-
-	signal.Notify(terminateSignals, syscall.SIGINT, syscall.SIGTERM) //NOTE:: syscall.SIGKILL we cannot catch kill -9 as its force kill signal.
-
-	_, ok := <-terminateSignals
-
-	if ok && len(flag.FlagFileStorage) != 0 {
-		var FinalData []Metrics
-
-		for n, v := range m.Gaugemem {
-			var data Metrics
-
-			data.ID = n
-
-			value := float64(v)
-			data.Value = &value
-
-			data.MType = "gauge"
-			FinalData = append(FinalData, data)
-		}
-
-		for n, v := range m.Countermem {
-			var data Metrics
-			data.ID = n
-			delta := int64(v)
-			data.Delta = &delta
-			data.MType = "counter"
-			FinalData = append(FinalData, data)
-		}
-		for _, metric := range FinalData {
-			WriteToFile(flag.FlagFileStorage, metric)
-		}
-		s.Shutdown(context.Background())
-	}
-
-}
-
 func WriteToFile(f string, mdata Metrics) {
 	Producer, err := NewProducer(f)
 	if err != nil {
@@ -154,15 +109,16 @@ func (m *MemStorage) GetAllMetricsAsMetricType() []Metrics {
 	for n, v := range m.Gaugemem {
 		var data Metrics
 		data.ID = n
-
-		*data.Value = float64(v)
+		value := float64(v)
+		data.Value = &value
 		data.MType = "gauge"
 		FinalData = append(FinalData, data)
 	}
 	for n, v := range m.Countermem {
 		var data Metrics
 		data.ID = n
-		*data.Delta = int64(v)
+		value := int64(v)
+		data.Delta = &value
 		data.MType = "counter"
 		FinalData = append(FinalData, data)
 	}

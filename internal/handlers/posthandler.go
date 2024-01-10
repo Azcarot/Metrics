@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/Azcarot/Metrics/cmd/storage"
+	"github.com/Azcarot/Metrics/internal/storage"
 )
 
 func MakeJSON(m storage.MemStorage) [][]byte {

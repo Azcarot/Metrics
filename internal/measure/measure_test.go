@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/Azcarot/Metrics/cmd/storage"
+	"github.com/Azcarot/Metrics/internal/storage"
 )
 
 func TestGetMetrics(t *testing.T) {

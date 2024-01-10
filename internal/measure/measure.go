@@ -4,7 +4,7 @@ import (
 	"math/rand"
 	"runtime"
 
-	"github.com/Azcarot/Metrics/cmd/storage"
+	"github.com/Azcarot/Metrics/internal/storage"
 )
 
 func CollectMetrics(m storage.MemStorage) storage.MemStorage {
