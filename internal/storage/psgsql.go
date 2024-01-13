@@ -41,17 +41,18 @@ func CreateTablesForMetrics(db *sql.DB) {
 	ctx := context.Background()
 	//Проверяем, есть ли такая БД
 	testQuery := "SELECT datname FROM pg_catalog.pg_database WHERE datname = 'AzcarotPractics'"
-	_, err := db.QueryContext(ctx, testQuery)
-	fmt.Println("HERE")
-	if err != nil {
-		_, err := db.ExecContext(ctx, "CREATE DATABASE 'AzcarotPractics'")
+	var test string
+	p, _ := db.QueryContext(ctx, testQuery)
+	p.Scan(&test)
+	if len(test) == 0 {
+		_, err := db.ExecContext(ctx, "CREATE DATABASE AzcarotPractics")
 		if err != nil {
 
 			log.Printf("Error %s when creating product DB", err)
 
 		}
 	}
-	_, err = db.ExecContext(ctx, query)
+	_, err := db.ExecContext(ctx, query)
 
 	if err != nil {
 
