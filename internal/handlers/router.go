@@ -17,6 +17,7 @@ var Flag storage.Flags
 var Storagehandler StorageHandler
 
 func MakeRouter(flag storage.Flags) *chi.Mux {
+
 	Storagehandler = StorageHandler{
 		Storage: &storage.MemStorage{
 			Gaugemem: make(map[string]storage.Gauge), Countermem: make(map[string]storage.Counter)},
@@ -51,6 +52,7 @@ func MakeRouter(flag storage.Flags) *chi.Mux {
 	r.Use(middleware.WithLogging, middleware.GzipHandler)
 	r.Route("/", func(r chi.Router) {
 		r.Get("/", Storagehandler.HandleGetAllMetrics().ServeHTTP)
+		r.Get("/ping", storage.CheckDBConnection(storage.DB).ServeHTTP)
 		r.Post("/update/", Storagehandler.HandleJSONPostMetrics(flag).ServeHTTP)
 		r.Post("/value/", Storagehandler.HandleJSONGetMetrics().ServeHTTP)
 		r.Post("/update/{type}/{name}/{value}", Storagehandler.HandlePostMetrics().ServeHTTP)

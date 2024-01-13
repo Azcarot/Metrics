@@ -24,6 +24,7 @@ type Flags struct {
 	FlagStoreInterval int
 	FlagFileStorage   string
 	FlagRestore       bool
+	FlagDBAddr        string
 }
 
 type ServerENV struct {
@@ -31,6 +32,7 @@ type ServerENV struct {
 	StoreInterval string `env:"STORE_INTERVAL"`
 	FileStorage   string `env:"FILE_STORAGE_PATH"`
 	Restore       bool   `env:"RESTORE"`
+	DBAddress     string `env:"DATABASE_DSN"`
 }
 
 type AllowedMetrics struct {
