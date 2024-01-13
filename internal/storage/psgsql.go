@@ -37,13 +37,10 @@ func CheckDBConnection(db *sql.DB) http.Handler {
 }
 
 func CreateTablesForMetrics(db *sql.DB) {
-	query := `CREATE TABLE IF NOT EXISTS metrics(id int primary key auto_increment, name text, 
-
-		type text, gauge_value double precision default NULL, counter_value int defualt NULL)`
+	query := `CREATE TABLE IF NOT EXISTS metrics (id int primary key auto_increment, name text, type text, gauge_value double default NULL, counter_value int default NULL )`
 	ctx := context.Background()
 
-	dbname := "AzcarotPractics"
-	_, err := db.ExecContext(ctx, "CREATE DATABASE IF NOT EXISTS "+dbname)
+	_, err := db.ExecContext(ctx, "CREATE DATABASE IF NOT EXISTS 'AzcarotPractics'")
 	if err != nil {
 
 		log.Printf("Error %s when creating product DB", err)
