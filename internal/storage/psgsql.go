@@ -42,7 +42,10 @@ func CreateTablesForMetrics(db *sql.DB) {
 	//Проверяем, есть ли такая БД
 	testQuery := "SELECT datname FROM pg_catalog.pg_database WHERE datname = 'AzcarotPractics'"
 	var test string
-	p, _ := db.QueryContext(ctx, testQuery)
+	p, err := db.QueryContext(ctx, testQuery)
+	if err != nil {
+		return
+	}
 	p.Scan(&test)
 	if len(test) == 0 {
 		_, err := db.ExecContext(ctx, "CREATE DATABASE AzcarotPractics")
@@ -52,7 +55,7 @@ func CreateTablesForMetrics(db *sql.DB) {
 
 		}
 	}
-	_, err := db.ExecContext(ctx, query)
+	_, err = db.ExecContext(ctx, query)
 
 	if err != nil {
 
