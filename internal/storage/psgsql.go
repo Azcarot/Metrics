@@ -42,7 +42,7 @@ func CreateTablesForMetrics(db *sql.DB) {
 	//Проверяем, есть ли такая БД
 	test_query := "SELECT datname FROM pg_catalog.pg_database WHERE datname = 'AzcarotPractics'"
 	_, err := db.QueryContext(ctx, test_query)
-
+	fmt.Println("HERE")
 	if err != nil {
 		_, err := db.ExecContext(ctx, "CREATE DATABASE 'AzcarotPractics'")
 		if err != nil {
@@ -64,9 +64,9 @@ func CreateTablesForMetrics(db *sql.DB) {
 func WriteMetricsToPstgrs(db *sql.DB, data Metrics, t string) {
 	switch t {
 	case "gauge":
-		db.ExecContext(context.Background(), "insert into metrics (name, type, gauge_value) values", data.ID, data.MType, data.Value)
+		db.ExecContext(context.Background(), `insert into metrics (name, type, gauge_value) values ($1, $2, $3)`, data.ID, data.MType, data.Value)
 	case "counter":
-		db.ExecContext(context.Background(), "insert into metrics (name, type, counter_value) values", data.ID, data.MType, data.Delta)
+		db.ExecContext(context.Background(), `insert into metrics (name, type, counter_value) values ($1, $2, $3)`, data.ID, data.MType, data.Delta)
 	default:
 		return
 	}
