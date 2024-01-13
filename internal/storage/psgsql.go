@@ -64,9 +64,9 @@ func CreateTablesForMetrics(db *sql.DB) {
 func WriteMetricsToPstgrs(db *sql.DB, data Metrics, t string) {
 	switch t {
 	case "gauge":
-		db.ExecContext(context.Background(), "insert into metrics (name, type, gauge_value) values)", data.ID, data.MType, data.Value)
+		db.ExecContext(context.Background(), "insert into metrics (name, type, gauge_value) values", data.ID, data.MType, data.Value)
 	case "counter":
-		db.ExecContext(context.Background(), "insert into metrics (name, type, counter_value) values)", data.ID, data.MType, data.Delta)
+		db.ExecContext(context.Background(), "insert into metrics (name, type, counter_value) values", data.ID, data.MType, data.Delta)
 	default:
 		return
 	}
