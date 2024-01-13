@@ -40,8 +40,8 @@ func CreateTablesForMetrics(db *sql.DB) {
 	query := `CREATE TABLE IF NOT EXISTS metrics (id int primary key, name text, type text, gauge_value double precision default NULL, counter_value int default NULL )`
 	ctx := context.Background()
 	//Проверяем, есть ли такая БД
-	test_query := "SELECT datname FROM pg_catalog.pg_database WHERE datname = 'AzcarotPractics'"
-	_, err := db.QueryContext(ctx, test_query)
+	testQuery := "SELECT datname FROM pg_catalog.pg_database WHERE datname = 'AzcarotPractics'"
+	_, err := db.QueryContext(ctx, testQuery)
 	fmt.Println("HERE")
 	if err != nil {
 		_, err := db.ExecContext(ctx, "CREATE DATABASE 'AzcarotPractics'")
