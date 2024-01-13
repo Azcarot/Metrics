@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"net/http"
 
 	"github.com/Azcarot/Metrics/internal/handlers"
@@ -9,11 +8,10 @@ import (
 	"github.com/Azcarot/Metrics/internal/storage"
 )
 
-var DB *sql.DB
-
 func main() {
 
 	flag := serverconfigs.ParseFlagsAndENV()
+	storage.ConnectToDB(flag)
 	r := handlers.MakeRouter(flag)
 	server := &http.Server{
 		Addr:    flag.FlagAddr,

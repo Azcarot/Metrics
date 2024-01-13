@@ -23,7 +23,6 @@ func ConnectToDB(f Flags) {
 
 func CheckDBConnection(db *sql.DB) http.Handler {
 	checkConnection := func(res http.ResponseWriter, req *http.Request) {
-
 		err := db.Ping()
 		result := (err == nil)
 		if result {
