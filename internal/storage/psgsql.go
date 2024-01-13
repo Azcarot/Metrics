@@ -37,23 +37,14 @@ func CheckDBConnection(db *sql.DB) http.Handler {
 }
 
 func CreateTablesForMetrics(db *sql.DB) {
-	query := `CREATE TABLE IF NOT EXISTS metrics (id int primary key, name text, type text, gauge_value double precision default NULL, counter_value int default NULL )`
+	query := `CREATE TABLE IF NOT EXISTS metrics (name text, type text, gauge_value double precision default NULL, counter_value int default NULL )`
+	queryForFun := `DROP TABLE IF EXISTS metrics CASCADE`
 	ctx := context.Background()
-	//Проверяем, есть ли такая БД
-	testQuery := "SELECT datname FROM pg_catalog.pg_database WHERE datname = 'AzcarotPractics'"
-	var test string
-	p, err := db.QueryContext(ctx, testQuery)
+	_, err := db.ExecContext(ctx, queryForFun)
 	if err != nil {
-		return
-	}
-	p.Scan(&test)
-	if len(test) == 0 {
-		_, err := db.ExecContext(ctx, "CREATE DATABASE AzcarotPractics")
-		if err != nil {
 
-			log.Printf("Error %s when creating product DB", err)
+		log.Printf("Error %s when Droping product table", err)
 
-		}
 	}
 	_, err = db.ExecContext(ctx, query)
 
@@ -66,11 +57,15 @@ func CreateTablesForMetrics(db *sql.DB) {
 }
 
 func WriteMetricsToPstgrs(db *sql.DB, data Metrics, t string) {
+	ctx := context.Background()
 	switch t {
 	case "gauge":
-		db.ExecContext(context.Background(), `insert into metrics (name, type, gauge_value) values ($1, $2, $3)`, data.ID, data.MType, data.Value)
+		db.ExecContext(ctx, `insert into metrics (name, type, gauge_value) values ($1, $2, $3);`, data.ID, data.MType, data.Value)
 	case "counter":
-		db.ExecContext(context.Background(), `insert into metrics (name, type, counter_value) values ($1, $2, $3)`, data.ID, data.MType, data.Delta)
+		fmt.Println("TEST", data.ID)
+		p, err := db.ExecContext(ctx, `INSERT INTO metrics (name, type, counter_value) VALUES ($1, $2, $3);`, data.ID, data.MType, data.Delta)
+		fmt.Println("p ", p)
+		fmt.Println("err ", err)
 	default:
 		return
 	}
