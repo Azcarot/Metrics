@@ -12,6 +12,7 @@ func main() {
 
 	flag := serverconfigs.ParseFlagsAndENV()
 	storage.ConnectToDB(flag)
+	storage.CreateTablesForMetrics(storage.DB)
 	r := handlers.MakeRouter(flag)
 	server := &http.Server{
 		Addr:    flag.FlagAddr,

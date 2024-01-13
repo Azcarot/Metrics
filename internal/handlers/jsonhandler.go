@@ -35,6 +35,9 @@ func (st *StorageHandler) HandleJSONPostMetrics(flag storage.Flags) http.Handler
 				res.WriteHeader(http.StatusBadRequest)
 				return
 			}
+			if len(flag.FlagDBAddr) != 0 {
+				storage.WriteMetricsToPstgrs(storage.DB, metricData, metricData.MType)
+			}
 			if len(flag.FlagFileStorage) != 0 && flag.FlagStoreInterval == 0 {
 				fileName := flag.FlagFileStorage
 				storage.WriteToFile(fileName, metricData)
@@ -60,6 +63,9 @@ func (st *StorageHandler) HandleJSONPostMetrics(flag storage.Flags) http.Handler
 			if err != nil {
 				res.WriteHeader(http.StatusBadRequest)
 				return
+			}
+			if len(flag.FlagDBAddr) != 0 {
+				storage.WriteMetricsToPstgrs(storage.DB, metricData, metricData.MType)
 			}
 			if len(flag.FlagFileStorage) != 0 && flag.FlagStoreInterval == 0 {
 				fileName := flag.FlagFileStorage
