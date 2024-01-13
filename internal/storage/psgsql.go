@@ -12,8 +12,7 @@ var DB *sql.DB
 
 func ConnectToDB(f Flags) {
 	var err error
-	ps := fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable",
-		f.FlagDBAddr, `video`, `XXXXXXXX`, `video`)
+	ps := fmt.Sprintf(f.FlagDBAddr)
 	DB, err = sql.Open("pgx", ps)
 	if err != nil {
 		panic(err)
