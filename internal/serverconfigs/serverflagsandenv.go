@@ -13,7 +13,7 @@ import (
 func ParseFlagsAndENV() storage.Flags {
 	var Flag storage.Flags
 	flag.StringVar(&Flag.FlagAddr, "a", "localhost:8080", "address and port to run server")
-	flag.StringVar(&Flag.FlagDBAddr, "d", "localhost", "address for db")
+	flag.StringVar(&Flag.FlagDBAddr, "d", "", "address for db")
 	flag.StringVar(&Flag.FlagFileStorage, "f", "/tmp/metrics-db.json", "address of a file-storage")
 	flag.IntVar(&Flag.FlagStoreInterval, "i", 300, "interval for storing data")
 	flag.BoolVar(&Flag.FlagRestore, "r", true, "reading data from file first")

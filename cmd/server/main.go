@@ -12,12 +12,14 @@ import (
 func main() {
 
 	flag := serverconfigs.ParseFlagsAndENV()
-
-	err := storage.NewConn(flag)
-	if err != nil {
-		panic(err)
+	if flag.FlagDBAddr != "" {
+		err := storage.NewConn(flag)
+		if err != nil {
+			panic(err)
+		}
+		storage.CreateTablesForMetrics(storage.DB)
+		defer storage.DB.Close(context.Background())
 	}
-	storage.CreateTablesForMetrics(storage.DB)
 	r := handlers.MakeRouter(flag)
 	server := &http.Server{
 		Addr:    flag.FlagAddr,
@@ -25,6 +27,5 @@ func main() {
 	}
 	go handlers.GetSignal(server, flag)
 	server.ListenAndServe()
-	defer storage.DB.Close(context.Background())
 
 }
