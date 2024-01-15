@@ -103,6 +103,65 @@ func (st *StorageHandler) HandleJSONPostMetrics(flag storage.Flags) http.Handler
 	return http.HandlerFunc(postMetric)
 }
 
+func (st *StorageHandler) HandleMultipleJSONPostMetrics(flag storage.Flags) http.Handler {
+	getMetrics := func(res http.ResponseWriter, req *http.Request) {
+		var metrics []storage.Metrics
+		var buf bytes.Buffer
+		_, err := buf.ReadFrom(req.Body)
+		if err != nil {
+			res.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		if err = json.Unmarshal(buf.Bytes(), &metrics); err != nil {
+			res.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		if len(flag.FlagDBAddr) != 0 {
+			err := storage.BatchWriteToPstgrs(storage.DB, metrics)
+			if err != nil {
+				res.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+		}
+		for _, metricData := range metrics {
+			switch metricData.MType {
+			case storage.CounterType:
+				value := strconv.Itoa(int(*metricData.Delta))
+				err := st.Storage.StoreMetrics(metricData.ID, strings.ToLower(metricData.MType), value)
+				if err != nil {
+					res.WriteHeader(http.StatusBadRequest)
+					return
+				}
+				if len(flag.FlagFileStorage) != 0 && flag.FlagStoreInterval == 0 && len(flag.FlagDBAddr) == 0 {
+					fileName := flag.FlagFileStorage
+					storage.WriteToFile(fileName, metricData)
+				}
+
+			case storage.GuageType:
+				value := strconv.FormatFloat(float64(*metricData.Value), 'g', -1, 64)
+
+				err := st.Storage.StoreMetrics(metricData.ID, strings.ToLower(metricData.MType), value)
+				if err != nil {
+					res.WriteHeader(http.StatusBadRequest)
+					return
+				}
+				if len(flag.FlagFileStorage) != 0 && flag.FlagStoreInterval == 0 && len(flag.FlagDBAddr) == 0 {
+					fileName := flag.FlagFileStorage
+					storage.WriteToFile(fileName, metricData)
+				}
+
+			default:
+				res.WriteHeader(http.StatusBadRequest)
+				return
+			}
+
+			res.WriteHeader(http.StatusOK)
+
+		}
+	}
+	return http.HandlerFunc(getMetrics)
+}
+
 func (st *StorageHandler) HandleJSONGetMetrics() http.Handler {
 
 	getMetric := func(res http.ResponseWriter, req *http.Request) {

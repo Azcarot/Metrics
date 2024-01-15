@@ -54,6 +54,7 @@ func MakeRouter(flag storage.Flags) *chi.Mux {
 		r.Get("/", Storagehandler.HandleGetAllMetrics().ServeHTTP)
 		r.Get("/ping", storage.CheckDBConnection(storage.DB).ServeHTTP)
 		r.Post("/update/", Storagehandler.HandleJSONPostMetrics(flag).ServeHTTP)
+		r.Post("/updates/", Storagehandler.HandleMultipleJSONPostMetrics(flag).ServeHTTP)
 		r.Post("/value/", Storagehandler.HandleJSONGetMetrics().ServeHTTP)
 		r.Post("/update/{type}/{name}/{value}", Storagehandler.HandlePostMetrics().ServeHTTP)
 		r.Get("/value/{name}/{type}", Storagehandler.HandleGetMetrics().ServeHTTP)
