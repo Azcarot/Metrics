@@ -116,7 +116,7 @@ func (st *StorageHandler) HandleMultipleJSONPostMetrics(flag storage.Flags) http
 			res.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		if len(flag.FlagDBAddr) != 0 {
+		if flag.FlagDBAddr != "" {
 			err := storage.BatchWriteToPstgrs(storage.DB, metrics)
 			if err != nil {
 				res.WriteHeader(http.StatusInternalServerError)
@@ -132,7 +132,7 @@ func (st *StorageHandler) HandleMultipleJSONPostMetrics(flag storage.Flags) http
 					res.WriteHeader(http.StatusBadRequest)
 					return
 				}
-				if len(flag.FlagFileStorage) != 0 && flag.FlagStoreInterval == 0 && len(flag.FlagDBAddr) == 0 {
+				if len(flag.FlagFileStorage) != 0 && flag.FlagStoreInterval == 0 && flag.FlagDBAddr == "" {
 					fileName := flag.FlagFileStorage
 					storage.WriteToFile(fileName, metricData)
 				}
@@ -145,7 +145,7 @@ func (st *StorageHandler) HandleMultipleJSONPostMetrics(flag storage.Flags) http
 					res.WriteHeader(http.StatusBadRequest)
 					return
 				}
-				if len(flag.FlagFileStorage) != 0 && flag.FlagStoreInterval == 0 && len(flag.FlagDBAddr) == 0 {
+				if len(flag.FlagFileStorage) != 0 && flag.FlagStoreInterval == 0 && flag.FlagDBAddr == "" {
 					fileName := flag.FlagFileStorage
 					storage.WriteToFile(fileName, metricData)
 				}
