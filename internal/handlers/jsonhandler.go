@@ -129,7 +129,7 @@ func (st *StorageHandler) HandleMultipleJSONPostMetrics(flag storage.Flags) http
 			case storage.CounterType:
 				value := strconv.Itoa(int(*metricData.Delta))
 				storeerr = st.Storage.StoreMetrics(metricData.ID, strings.ToLower(metricData.MType), value)
-				if err != nil {
+				if storeerr != nil {
 
 					break
 				}
@@ -142,7 +142,7 @@ func (st *StorageHandler) HandleMultipleJSONPostMetrics(flag storage.Flags) http
 				value := strconv.FormatFloat(float64(*metricData.Value), 'g', -1, 64)
 
 				storeerr = st.Storage.StoreMetrics(metricData.ID, strings.ToLower(metricData.MType), value)
-				if err != nil {
+				if storeerr != nil {
 
 					break
 				}
