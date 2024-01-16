@@ -53,15 +53,17 @@ func (m *MemStorage) StoreMetrics(n, t, v string) error {
 		if err != nil {
 			return err
 		}
-		m.Gaugemem[n] = Gauge(value)
-		storedData.Gaugemem[n] = Gauge(value)
+		newvalue := Gauge(value)
+		m.Gaugemem[n] = newvalue
+		storedData.Gaugemem[n] = newvalue
 	case CounterType:
 		value, err := strconv.Atoi(v)
 		if err != nil {
 			return err
 		}
-		m.Countermem[n] += Counter(value)
-		storedData.Countermem[n] += Counter(value)
+		newvalue := Counter(value)
+		m.Countermem[n] += newvalue
+		storedData.Countermem[n] += newvalue
 	}
 	return nil
 }
