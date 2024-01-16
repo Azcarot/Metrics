@@ -3,6 +3,7 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -112,7 +113,9 @@ func (st *StorageHandler) HandleMultipleJSONPostMetrics(flag storage.Flags) http
 			res.WriteHeader(http.StatusBadRequest)
 			return
 		}
+		fmt.Println("Here")
 		if err = json.Unmarshal(buf.Bytes(), &metrics); err != nil {
+			fmt.Println(err)
 			res.WriteHeader(http.StatusBadRequest)
 			return
 		}
