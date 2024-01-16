@@ -2,7 +2,6 @@ package storage
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"strconv"
 	"strings"
@@ -48,10 +47,12 @@ type MemInteractions interface {
 }
 
 func (m *MemStorage) StoreMetrics(n, t, v string) error {
-	val, _ := m.GetStoredMetrics(n, t)
-	fmt.Println("VALUE!!!!! ", val)
+
 	switch t {
 	case GuageType:
+		if storedData.Gaugemem == nil {
+			storedData.Gaugemem = make(map[string]Gauge)
+		}
 		value, err := strconv.ParseFloat(v, 64)
 		if err != nil {
 			return err
@@ -60,6 +61,9 @@ func (m *MemStorage) StoreMetrics(n, t, v string) error {
 		m.Gaugemem[n] = newvalue
 		storedData.Gaugemem[n] = newvalue
 	case CounterType:
+		if storedData.Countermem == nil {
+			storedData.Countermem = make(map[string]Counter)
+		}
 		value, err := strconv.Atoi(v)
 		if err != nil {
 			return err
