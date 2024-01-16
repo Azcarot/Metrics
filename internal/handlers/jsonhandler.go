@@ -3,6 +3,7 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -126,11 +127,13 @@ func (st *StorageHandler) HandleMultipleJSONPostMetrics(flag storage.Flags) http
 		var storeerr error
 		for _, metricData := range metrics {
 			switch metricData.MType {
+
 			case storage.CounterType:
+				fmt.Println("!!!Here ", metricData.MType)
 				value := strconv.Itoa(int(*metricData.Delta))
 				storeerr = st.Storage.StoreMetrics(metricData.ID, strings.ToLower(metricData.MType), value)
 				if storeerr != nil {
-
+					fmt.Println("!!!Here ", storeerr)
 					break
 				}
 				if len(flag.FlagFileStorage) != 0 && flag.FlagStoreInterval == 0 && flag.FlagDBAddr == "" {
