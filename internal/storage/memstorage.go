@@ -47,6 +47,8 @@ type MemInteractions interface {
 }
 
 func (m *MemStorage) StoreMetrics(n, t, v string) error {
+	storedData.Gaugemem = make(map[string]Gauge)
+	storedData.Countermem = make(map[string]Counter)
 	switch t {
 	case GuageType:
 		value, err := strconv.ParseFloat(v, 64)
