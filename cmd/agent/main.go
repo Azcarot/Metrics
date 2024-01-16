@@ -21,13 +21,13 @@ func main() {
 		select {
 		case <-reporttimer:
 			body, bodyJSON := agentconfigs.MakeJSON(metric)
-
 			handlers.PostJSONMetrics(bodyJSON, batchrout)
 			for _, buf := range body {
 				handlers.PostJSONMetrics(buf, singlerout)
 			}
 			reporttimer = time.After(reporttime)
 		default:
+
 			metric = measure.CollectMetrics(metric)
 			time.Sleep(sleeptime)
 		}

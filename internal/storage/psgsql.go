@@ -25,7 +25,8 @@ func NewConn(f Flags) error {
 
 func CheckDBConnection(db *pgx.Conn) http.Handler {
 	checkConnection := func(res http.ResponseWriter, req *http.Request) {
-		err := db.Ping(context.Background())
+
+		err := DB.Ping(context.Background())
 		result := (err == nil)
 		if result {
 			res.WriteHeader(http.StatusOK)
@@ -63,10 +64,7 @@ func WriteMetricsToPstgrs(db *pgx.Conn, data Metrics, t string) {
 	case "gauge":
 		db.Exec(ctx, `insert into metrics (name, type, gauge_value) values ($1, $2, $3);`, data.ID, data.MType, data.Value)
 	case "counter":
-		fmt.Println("TEST", data.ID)
-		p, err := db.Exec(ctx, `INSERT INTO metrics (name, type, counter_value) VALUES ($1, $2, $3);`, data.ID, data.MType, data.Delta)
-		fmt.Println("p ", p)
-		fmt.Println("err ", err)
+		db.Exec(ctx, `INSERT INTO metrics (name, type, counter_value) VALUES ($1, $2, $3);`, data.ID, data.MType, data.Delta)
 	default:
 		return
 	}

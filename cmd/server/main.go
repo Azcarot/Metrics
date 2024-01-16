@@ -17,6 +17,7 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
+		storage.CheckDBConnection(storage.DB)
 		storage.CreateTablesForMetrics(storage.DB)
 		defer storage.DB.Close(context.Background())
 	}
