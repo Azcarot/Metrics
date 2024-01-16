@@ -3,7 +3,6 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -113,9 +112,7 @@ func (st *StorageHandler) HandleMultipleJSONPostMetrics(flag storage.Flags) http
 			res.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		fmt.Println("Here")
 		if err = json.Unmarshal(buf.Bytes(), &metrics); err != nil {
-			fmt.Println(err)
 			res.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -126,14 +123,15 @@ func (st *StorageHandler) HandleMultipleJSONPostMetrics(flag storage.Flags) http
 				return
 			}
 		}
+		var storeerr error
 		for _, metricData := range metrics {
 			switch metricData.MType {
 			case storage.CounterType:
 				value := strconv.Itoa(int(*metricData.Delta))
-				err := st.Storage.StoreMetrics(metricData.ID, strings.ToLower(metricData.MType), value)
+				storeerr = st.Storage.StoreMetrics(metricData.ID, strings.ToLower(metricData.MType), value)
 				if err != nil {
-					res.WriteHeader(http.StatusBadRequest)
-					return
+
+					break
 				}
 				if len(flag.FlagFileStorage) != 0 && flag.FlagStoreInterval == 0 && flag.FlagDBAddr == "" {
 					fileName := flag.FlagFileStorage
@@ -143,10 +141,10 @@ func (st *StorageHandler) HandleMultipleJSONPostMetrics(flag storage.Flags) http
 			case storage.GuageType:
 				value := strconv.FormatFloat(float64(*metricData.Value), 'g', -1, 64)
 
-				err := st.Storage.StoreMetrics(metricData.ID, strings.ToLower(metricData.MType), value)
+				storeerr = st.Storage.StoreMetrics(metricData.ID, strings.ToLower(metricData.MType), value)
 				if err != nil {
-					res.WriteHeader(http.StatusBadRequest)
-					return
+
+					break
 				}
 				if len(flag.FlagFileStorage) != 0 && flag.FlagStoreInterval == 0 && flag.FlagDBAddr == "" {
 					fileName := flag.FlagFileStorage
@@ -158,9 +156,12 @@ func (st *StorageHandler) HandleMultipleJSONPostMetrics(flag storage.Flags) http
 				return
 			}
 
-			res.WriteHeader(http.StatusOK)
-
 		}
+		if storeerr != nil {
+			res.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		res.WriteHeader(http.StatusOK)
 	}
 	return http.HandlerFunc(getMetrics)
 }
