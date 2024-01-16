@@ -3,7 +3,6 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -124,46 +123,46 @@ func (st *StorageHandler) HandleMultipleJSONPostMetrics(flag storage.Flags) http
 				return
 			}
 		}
-		var storeerr error
-		for _, metricData := range metrics {
-			switch metricData.MType {
+		// var storeerr error
+		// for _, metricData := range metrics {
+		// 	switch metricData.MType {
 
-			case storage.CounterType:
-				fmt.Println("!!!Here ", metricData.MType)
-				value := strconv.Itoa(int(*metricData.Delta))
-				storeerr = st.Storage.StoreMetrics(metricData.ID, strings.ToLower(metricData.MType), value)
-				if storeerr != nil {
-					fmt.Println("!!!Here ", storeerr)
-					break
-				}
-				if len(flag.FlagFileStorage) != 0 && flag.FlagStoreInterval == 0 && flag.FlagDBAddr == "" {
-					fileName := flag.FlagFileStorage
-					storage.WriteToFile(fileName, metricData)
-				}
+		// 	case storage.CounterType:
 
-			case storage.GuageType:
-				value := strconv.FormatFloat(float64(*metricData.Value), 'g', -1, 64)
+		// 		value := strconv.Itoa(int(*metricData.Delta))
+		// 		storeerr = st.Storage.StoreMetrics(metricData.ID, strings.ToLower(metricData.MType), value)
+		// 		if storeerr != nil {
 
-				storeerr = st.Storage.StoreMetrics(metricData.ID, strings.ToLower(metricData.MType), value)
-				if storeerr != nil {
+		// 			break
+		// 		}
+		// 		if len(flag.FlagFileStorage) != 0 && flag.FlagStoreInterval == 0 && flag.FlagDBAddr == "" {
+		// 			fileName := flag.FlagFileStorage
+		// 			storage.WriteToFile(fileName, metricData)
+		// 		}
 
-					break
-				}
-				if len(flag.FlagFileStorage) != 0 && flag.FlagStoreInterval == 0 && flag.FlagDBAddr == "" {
-					fileName := flag.FlagFileStorage
-					storage.WriteToFile(fileName, metricData)
-				}
+		// 	case storage.GuageType:
+		// 		value := strconv.FormatFloat(float64(*metricData.Value), 'g', -1, 64)
 
-			default:
-				res.WriteHeader(http.StatusBadRequest)
-				return
-			}
+		// 		storeerr = st.Storage.StoreMetrics(metricData.ID, strings.ToLower(metricData.MType), value)
+		// 		if storeerr != nil {
 
-		}
-		if storeerr != nil {
-			res.WriteHeader(http.StatusBadRequest)
-			return
-		}
+		// 			break
+		// 		}
+		// 		if len(flag.FlagFileStorage) != 0 && flag.FlagStoreInterval == 0 && flag.FlagDBAddr == "" {
+		// 			fileName := flag.FlagFileStorage
+		// 			storage.WriteToFile(fileName, metricData)
+		// 		}
+
+		// 	default:
+		// 		res.WriteHeader(http.StatusBadRequest)
+		// 		return
+		// 	}
+
+		// }
+		// if storeerr != nil {
+		// 	res.WriteHeader(http.StatusBadRequest)
+		// 	return
+		// }
 		res.WriteHeader(http.StatusOK)
 	}
 	return http.HandlerFunc(getMetrics)
