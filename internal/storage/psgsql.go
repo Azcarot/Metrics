@@ -2,25 +2,53 @@ package storage
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 var DB *pgx.Conn
 
+type pgxConnTime struct {
+	attempts          int
+	timeBeforeAttempt int
+}
+
 func NewConn(f Flags) error {
+	var err error
+	var attempts pgxConnTime
+	attempts.attempts = 3
+	attempts.timeBeforeAttempt = 1
+	err = connectToDB(f)
+	for err != nil {
+		//если ошибка связи с бд, то это не эскпортируемый тип, отличный от PgError
+		var pqErr *pgconn.PgError
+		if errors.Is(err, pqErr) {
+			return err
+
+		}
+		if attempts.attempts == 0 {
+			return err
+		}
+		times := time.Duration(attempts.timeBeforeAttempt)
+		time.Sleep(times * time.Second)
+		attempts.attempts -= 1
+		attempts.timeBeforeAttempt += 2
+		err = connectToDB(f)
+
+	}
+	return nil
+}
+func connectToDB(f Flags) error {
 	var err error
 	ps := fmt.Sprintf(f.FlagDBAddr)
 	DB, err = pgx.Connect(context.Background(), ps)
-	if err != nil {
-		log.Printf("Error %s when establishing connect", err)
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func CheckDBConnection(db *pgx.Conn) http.Handler {

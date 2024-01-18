@@ -9,7 +9,7 @@ import (
 	"github.com/Azcarot/Metrics/internal/storage"
 )
 
-func PostJSONMetrics(b []byte, a string) *http.Response {
+func PostJSONMetrics(b []byte, a string) (*http.Response, error) {
 	pth := "http://" + a
 	b = agentconfigs.GzipForAgent(b)
 	resp, err := http.NewRequest("POST", pth, bytes.NewBuffer(b))
@@ -19,8 +19,8 @@ func PostJSONMetrics(b []byte, a string) *http.Response {
 	resp.Header.Add("Content-Type", storage.JSONContentType)
 	resp.Header.Add("Content-Encoding", "gzip")
 	client := &http.Client{}
-	res, _ := client.Do(resp)
-	return res
+	res, err := client.Do(resp)
+	return res, err
 }
 
 func PostMetrics(pth string) *http.Response {

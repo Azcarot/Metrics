@@ -3,7 +3,6 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -124,7 +123,6 @@ func (st *StorageHandler) HandleMultipleJSONPostMetrics(flag storage.Flags) http
 				return
 			}
 		}
-		fmt.Println("METRICS", metrics)
 		var storeerr error
 		for _, metricData := range metrics {
 			switch metricData.MType {

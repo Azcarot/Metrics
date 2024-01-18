@@ -10,6 +10,8 @@ import (
 )
 
 func main() {
+	sendAttempts := 3
+	timeBeforeAttempt := 1
 	agentflagData := *agentconfigs.SetValues()
 	batchrout := agentflagData.Addr + "/updates/"
 	singlerout := agentflagData.Addr + "/update/"
@@ -21,7 +23,18 @@ func main() {
 		select {
 		case <-reporttimer:
 			body, bodyJSON := agentconfigs.MakeJSON(metric)
-			handlers.PostJSONMetrics(bodyJSON, batchrout)
+			_, err := handlers.PostJSONMetrics(bodyJSON, batchrout)
+			for err != nil {
+				if sendAttempts == 0 {
+					panic(err)
+				}
+				times := time.Duration(timeBeforeAttempt)
+				time.Sleep(times * time.Second)
+				sendAttempts -= 1
+				timeBeforeAttempt += 2
+				_, err = handlers.PostJSONMetrics(bodyJSON, batchrout)
+
+			}
 			for _, buf := range body {
 				handlers.PostJSONMetrics(buf, singlerout)
 			}
