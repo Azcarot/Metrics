@@ -24,6 +24,7 @@ type Flags struct {
 	FlagStoreInterval int
 	FlagFileStorage   string
 	FlagRestore       bool
+	FlagDBAddr        string
 }
 
 type ServerENV struct {
@@ -31,6 +32,7 @@ type ServerENV struct {
 	StoreInterval string `env:"STORE_INTERVAL"`
 	FileStorage   string `env:"FILE_STORAGE_PATH"`
 	Restore       bool   `env:"RESTORE"`
+	DBAddress     string `env:"DATABASE_DSN"`
 }
 
 type AllowedMetrics struct {
@@ -45,21 +47,30 @@ type MemInteractions interface {
 }
 
 func (m *MemStorage) StoreMetrics(n, t, v string) error {
+
 	switch t {
 	case GuageType:
+		if storedData.Gaugemem == nil {
+			storedData.Gaugemem = make(map[string]Gauge)
+		}
 		value, err := strconv.ParseFloat(v, 64)
 		if err != nil {
 			return err
 		}
-		m.Gaugemem[n] = Gauge(value)
-		storedData.Gaugemem[n] = Gauge(value)
+		newvalue := Gauge(value)
+		m.Gaugemem[n] = newvalue
+		storedData.Gaugemem[n] = newvalue
 	case CounterType:
+		if storedData.Countermem == nil {
+			storedData.Countermem = make(map[string]Counter)
+		}
 		value, err := strconv.Atoi(v)
 		if err != nil {
 			return err
 		}
-		m.Countermem[n] += Counter(value)
-		storedData.Countermem[n] += Counter(value)
+		newvalue := Counter(value)
+		m.Countermem[n] += newvalue
+		storedData.Countermem[n] += newvalue
 	}
 	return nil
 }

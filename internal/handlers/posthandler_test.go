@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/Azcarot/Metrics/internal/agentconfigs"
 	"github.com/Azcarot/Metrics/internal/storage"
 )
 
@@ -22,7 +23,7 @@ func TestMakepath(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := Makepath(tt.args.m, "localhost:8080"); !reflect.DeepEqual(got[0], tt.want) {
+			if got := agentconfigs.Makepath(tt.args.m, "localhost:8080"); !reflect.DeepEqual(got[0], tt.want) {
 				t.Errorf("Makepath() = %v, want %v", got[0], tt.want)
 			}
 		})
