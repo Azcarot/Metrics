@@ -97,6 +97,7 @@ func (st *StorageHandler) HandleJSONPostMetrics(flag storage.Flags) http.Handler
 		}
 		if len(flag.FlagKey) > 0 {
 			result, _ := st.Storage.GetStoredMetrics(metricData.ID, strings.ToLower(metricData.MType))
+			result = storage.ShaMetrics(result, flag.FlagKey)
 			res.Header().Set("HashSHA256", result)
 		}
 		res.Header().Set("Content-Type", storage.JSONContentType)
@@ -210,6 +211,7 @@ func (st *StorageHandler) HandleJSONGetMetrics(flag storage.Flags) http.Handler 
 					}
 					if len(flag.FlagKey) > 0 {
 						result, _ := st.Storage.GetStoredMetrics(metric.ID, strings.ToLower(metric.MType))
+						result = storage.ShaMetrics(result, flag.FlagKey)
 						res.Header().Set("HashSHA256", result)
 					}
 					res.Write(resp)
@@ -227,6 +229,7 @@ func (st *StorageHandler) HandleJSONGetMetrics(flag storage.Flags) http.Handler 
 					}
 					if len(flag.FlagKey) > 0 {
 						result, _ := st.Storage.GetStoredMetrics(metric.ID, strings.ToLower(metric.MType))
+						result = storage.ShaMetrics(result, flag.FlagKey)
 						res.Header().Set("HashSHA256", result)
 					}
 					res.Write(resp)

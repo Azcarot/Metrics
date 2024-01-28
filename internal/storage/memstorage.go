@@ -3,6 +3,7 @@ package storage
 import (
 	"crypto/hmac"
 	"crypto/sha256"
+	"encoding/base64"
 	"errors"
 	"log"
 	"strconv"
@@ -189,7 +190,8 @@ func ShaMetrics(result string, key string) string {
 	h.Write(b)
 	// вычисляем хеш
 	hash := h.Sum(nil)
-	return string(hash)
+	sha := base64.URLEncoding.EncodeToString(hash)
+	return string(sha)
 }
 
 var MetricNameTypes = map[string]string{

@@ -11,15 +11,19 @@ import (
 
 func PostJSONMetrics(b []byte, a string, f agentconfigs.AgentData) (*http.Response, error) {
 	pth := "http://" + a
+	var hashedMetrics string
+
+	if len(f.HashKey) > 0 {
+		hashedMetrics = agentconfigs.MakeSHA(b, f.HashKey)
+	}
 	b = agentconfigs.GzipForAgent(b)
 
 	resp, err := http.NewRequest("POST", pth, bytes.NewBuffer(b))
 	if err != nil {
 		panic(fmt.Sprintf("cannot post %s ", b))
 	}
-	if len(f.HashKey) > 0 {
-		hashedMetrics := agentconfigs.MakeSHA(b, f.HashKey)
-		resp.Header.Add("HashSHA256", string(hashedMetrics))
+	if len(hashedMetrics) > 0 {
+		resp.Header.Set("HashSHA256", hashedMetrics)
 	}
 	resp.Header.Add("Content-Type", storage.JSONContentType)
 	resp.Header.Add("Content-Encoding", "gzip")

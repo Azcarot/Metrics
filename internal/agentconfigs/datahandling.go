@@ -5,6 +5,7 @@ import (
 	"compress/gzip"
 	"crypto/hmac"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -39,7 +40,7 @@ func Makepath(m storage.MemStorage, a string) []string {
 	}
 	return path
 }
-func MakeSHA(b []byte, k string) []byte {
+func MakeSHA(b []byte, k string) string {
 	key := []byte(k)
 	// создаём новый hash.Hash, вычисляющий контрольную сумму SHA-256
 	h := hmac.New(sha256.New, key)
@@ -47,7 +48,8 @@ func MakeSHA(b []byte, k string) []byte {
 	h.Write(b)
 	// вычисляем хеш
 	hash := h.Sum(nil)
-	return hash
+	result := base64.URLEncoding.EncodeToString(hash)
+	return result
 }
 
 func MakeJSON(m storage.MemStorage) ([][]byte, []byte) {
