@@ -17,6 +17,7 @@ func ParseFlagsAndENV() storage.Flags {
 	flag.StringVar(&Flag.FlagFileStorage, "f", "/tmp/metrics-db.json", "address of a file-storage")
 	flag.IntVar(&Flag.FlagStoreInterval, "i", 300, "interval for storing data")
 	flag.BoolVar(&Flag.FlagRestore, "r", true, "reading data from file first")
+	flag.StringVar(&Flag.FlagKey, "k", "", "Hash key")
 	flag.Parse()
 	var envcfg storage.ServerENV
 	err := env.Parse(&envcfg)
@@ -33,6 +34,9 @@ func ParseFlagsAndENV() storage.Flags {
 
 	if len(envcfg.FileStorage) > 0 {
 		Flag.FlagFileStorage = envcfg.FileStorage
+	}
+	if len(envcfg.Key) > 0 {
+		Flag.FlagKey = envcfg.Key
 	}
 	restore := os.Getenv("RESTORE")
 	if len(restore) > 0 {

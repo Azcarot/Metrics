@@ -49,13 +49,13 @@ func MakeRouter(flag storage.Flags) *chi.Mux {
 	// делаем регистратор SugaredLogger
 	middleware.Sugar = *logger.Sugar()
 	r := chi.NewRouter()
-	r.Use(middleware.WithLogging, middleware.GzipHandler)
+	r.Use(middleware.WithLogging, middleware.GzipHandler, middleware.GetCheck(flag))
 	r.Route("/", func(r chi.Router) {
 		r.Get("/", Storagehandler.HandleGetAllMetrics().ServeHTTP)
 		r.Get("/ping", storage.CheckDBConnection(storage.DB).ServeHTTP)
 		r.Post("/update/", Storagehandler.HandleJSONPostMetrics(flag).ServeHTTP)
 		r.Post("/updates/", Storagehandler.HandleMultipleJSONPostMetrics(flag).ServeHTTP)
-		r.Post("/value/", Storagehandler.HandleJSONGetMetrics().ServeHTTP)
+		r.Post("/value/", Storagehandler.HandleJSONGetMetrics(flag).ServeHTTP)
 		r.Post("/update/{type}/{name}/{value}", Storagehandler.HandlePostMetrics().ServeHTTP)
 		r.Get("/value/{name}/{type}", Storagehandler.HandleGetMetrics().ServeHTTP)
 	})

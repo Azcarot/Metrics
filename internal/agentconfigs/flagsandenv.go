@@ -12,23 +12,27 @@ type AgentData struct {
 	Pollint   time.Duration
 	Reportint int
 	Addr      string
+	HashKey   string
 }
 
 var agentFlags struct {
 	pollinterval   int
 	reportInterval int
 	flagAddr       string
+	hashKey        string
 }
 
 type AgentENV struct {
 	Address string `env:"ADDRESS"`
 	PollInt int    `env:"POLL_INTERVAL"`
 	RepInt  int    `env:"REPORT_INTERVAL"`
+	Key     string `env:"KEY"`
 }
 
 func parseFlags() *AgentData {
 	var flagData AgentData
 	flag.StringVar(&agentFlags.flagAddr, "a", "localhost:8080", "address and port to run server")
+	flag.StringVar(&agentFlags.hashKey, "k", "", "key to hash sha")
 	flag.IntVar(&agentFlags.pollinterval, "p", 2, "PollInterval")
 	flag.IntVar(&agentFlags.reportInterval, "r", 10, "ReportInterval")
 	flag.Parse()
@@ -58,6 +62,9 @@ func SetValues() *AgentData {
 	}
 	if envcfg.RepInt > 0 {
 		flagData.Reportint = envcfg.RepInt
+	}
+	if len(envcfg.Key) > 0 {
+		flagData.HashKey = envcfg.Key
 	}
 	return flagData
 }

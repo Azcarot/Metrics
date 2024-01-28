@@ -95,6 +95,9 @@ func (st *StorageHandler) HandleJSONPostMetrics(flag storage.Flags) http.Handler
 			res.WriteHeader(http.StatusBadRequest)
 			return
 		}
+		if len(flag.FlagKey) > 0 {
+			res.Header().Set("HashSHA256", string(storage.ShaMetrics(string(resp), flag.FlagKey)))
+		}
 		res.Header().Set("Content-Type", storage.JSONContentType)
 		res.WriteHeader(http.StatusOK)
 		res.Write(resp)
@@ -116,6 +119,7 @@ func (st *StorageHandler) HandleMultipleJSONPostMetrics(flag storage.Flags) http
 			res.WriteHeader(http.StatusBadRequest)
 			return
 		}
+
 		if flag.FlagDBAddr != "" {
 			err := storage.BatchWriteToPstgrs(storage.DB, metrics)
 			if err != nil {
@@ -168,7 +172,7 @@ func (st *StorageHandler) HandleMultipleJSONPostMetrics(flag storage.Flags) http
 	return http.HandlerFunc(getMetrics)
 }
 
-func (st *StorageHandler) HandleJSONGetMetrics() http.Handler {
+func (st *StorageHandler) HandleJSONGetMetrics(flag storage.Flags) http.Handler {
 
 	getMetric := func(res http.ResponseWriter, req *http.Request) {
 		var metric storage.Metrics
@@ -203,6 +207,9 @@ func (st *StorageHandler) HandleJSONGetMetrics() http.Handler {
 						res.WriteHeader(http.StatusBadRequest)
 						return
 					}
+					if len(flag.FlagKey) > 0 {
+						res.Header().Set("HashSHA256", string(storage.ShaMetrics(string(resp), flag.FlagKey)))
+					}
 					res.Write(resp)
 				case storage.GuageType:
 					value, err := strconv.ParseFloat(result, 64)
@@ -215,6 +222,9 @@ func (st *StorageHandler) HandleJSONGetMetrics() http.Handler {
 					if err != nil {
 						res.WriteHeader(http.StatusBadRequest)
 						return
+					}
+					if len(flag.FlagKey) > 0 {
+						res.Header().Set("HashSHA256", string(storage.ShaMetrics(string(resp), flag.FlagKey)))
 					}
 					res.Write(resp)
 				default:

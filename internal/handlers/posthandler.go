@@ -9,12 +9,17 @@ import (
 	"github.com/Azcarot/Metrics/internal/storage"
 )
 
-func PostJSONMetrics(b []byte, a string) (*http.Response, error) {
+func PostJSONMetrics(b []byte, a string, f agentconfigs.AgentData) (*http.Response, error) {
 	pth := "http://" + a
 	b = agentconfigs.GzipForAgent(b)
+
 	resp, err := http.NewRequest("POST", pth, bytes.NewBuffer(b))
 	if err != nil {
 		panic(fmt.Sprintf("cannot post %s ", b))
+	}
+	if len(f.HashKey) > 0 {
+		hashedMetrics := agentconfigs.MakeSHA(b, f.HashKey)
+		resp.Header.Add("HashSHA256", string(hashedMetrics))
 	}
 	resp.Header.Add("Content-Type", storage.JSONContentType)
 	resp.Header.Add("Content-Encoding", "gzip")

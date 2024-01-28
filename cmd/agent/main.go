@@ -23,7 +23,7 @@ func main() {
 		select {
 		case <-reporttimer:
 			body, bodyJSON := agentconfigs.MakeJSON(metric)
-			_, err := handlers.PostJSONMetrics(bodyJSON, batchrout)
+			_, err := handlers.PostJSONMetrics(bodyJSON, batchrout, agentflagData)
 			for err != nil {
 				if sendAttempts == 0 {
 					panic(err)
@@ -32,11 +32,11 @@ func main() {
 				time.Sleep(times * time.Second)
 				sendAttempts -= 1
 				timeBeforeAttempt += 2
-				_, err = handlers.PostJSONMetrics(bodyJSON, batchrout)
+				_, err = handlers.PostJSONMetrics(bodyJSON, batchrout, agentflagData)
 
 			}
 			for _, buf := range body {
-				handlers.PostJSONMetrics(buf, singlerout)
+				handlers.PostJSONMetrics(buf, singlerout, agentflagData)
 			}
 			reporttimer = time.After(reporttime)
 		default:
