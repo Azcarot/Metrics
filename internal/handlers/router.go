@@ -49,7 +49,7 @@ func MakeRouter(flag storage.Flags) *chi.Mux {
 	// делаем регистратор SugaredLogger
 	middleware.Sugar = *logger.Sugar()
 	r := chi.NewRouter()
-	r.Use(middleware.WithLogging, middleware.GzipHandler, middleware.GetCheck(flag))
+	r.Use(middleware.WithLogging, middleware.GetCheck(flag), middleware.GzipHandler)
 	r.Route("/", func(r chi.Router) {
 		r.Get("/", Storagehandler.HandleGetAllMetrics().ServeHTTP)
 		r.Get("/ping", storage.CheckDBConnection(storage.DB).ServeHTTP)

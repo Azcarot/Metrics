@@ -3,6 +3,7 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -22,11 +23,13 @@ func (st *StorageHandler) HandleJSONPostMetrics(flag storage.Flags) http.Handler
 			res.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		if err = json.Unmarshal(buf.Bytes(), &metricData); err != nil {
+		data := buf.Bytes()
+
+		if err = json.Unmarshal(data, &metricData); err != nil {
+			fmt.Println("errorHere3")
 			res.WriteHeader(http.StatusBadRequest)
 			return
 		}
-
 		switch metricData.MType {
 		case storage.CounterType:
 			value := strconv.Itoa(int(*metricData.Delta))
@@ -92,6 +95,7 @@ func (st *StorageHandler) HandleJSONPostMetrics(flag storage.Flags) http.Handler
 
 		resp, err := json.Marshal(metricResult)
 		if err != nil {
+
 			res.WriteHeader(http.StatusBadRequest)
 			return
 		}

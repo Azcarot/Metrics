@@ -1,9 +1,12 @@
 package middleware
 
 import (
+	"bytes"
 	"crypto/hmac"
 	"crypto/sha256"
+	"encoding/base64"
 	"errors"
+	"io"
 	"net/http"
 
 	"github.com/Azcarot/Metrics/internal/storage"
@@ -13,18 +16,29 @@ func GetCheck(flag storage.Flags) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			key := r.Header.Get("HashSHA256")
+
 			if len(key) == 0 {
 				next.ServeHTTP(w, r)
 				return
 			}
+			// читаем тело запроса
+			buff, _ := io.ReadAll(r.Body)
+			bodycopy := io.NopCloser(bytes.NewBuffer(buff))
 			if flag.FlagKey != "" {
 
 				if len(key) > 0 {
-					data := []byte(key)
-					h := hmac.New(sha256.New, []byte(flag.FlagKey))
-					h.Write(data[:4])
-					sign := h.Sum(nil)
-					if hmac.Equal(sign, data[4:]) {
+					expected, err := base64.URLEncoding.DecodeString(key)
+					if err != nil {
+						panic(err)
+					}
+					data := buff
+					key := []byte(flag.FlagKey)
+					h := hmac.New(sha256.New, key)
+					h.Write(data)
+					got := h.Sum(nil)
+					if hmac.Equal(got, expected) {
+						r.Body.Close()
+						r.Body = bodycopy
 						next.ServeHTTP(w, r)
 					} else {
 						err := errors.New("wrong signature")
