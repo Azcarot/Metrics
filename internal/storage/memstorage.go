@@ -180,7 +180,7 @@ func (m *MemStorage) GetStoredMetrics(n string, t string) (string, error) {
 	return result, err
 }
 
-func ShaMetrics(result string, key string) []byte {
+func ShaMetrics(result string, key string) string {
 	b := []byte(result)
 	shakey := []byte(key)
 	// создаём новый hash.Hash, вычисляющий контрольную сумму SHA-256
@@ -189,7 +189,7 @@ func ShaMetrics(result string, key string) []byte {
 	h.Write(b)
 	// вычисляем хеш
 	hash := h.Sum(nil)
-	return hash
+	return string(hash)
 }
 
 var MetricNameTypes = map[string]string{

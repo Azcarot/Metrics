@@ -96,7 +96,8 @@ func (st *StorageHandler) HandleJSONPostMetrics(flag storage.Flags) http.Handler
 			return
 		}
 		if len(flag.FlagKey) > 0 {
-			res.Header().Set("HashSHA256", string(storage.ShaMetrics(string(resp), flag.FlagKey)))
+			result, _ := st.Storage.GetStoredMetrics(metricData.ID, strings.ToLower(metricData.MType))
+			res.Header().Set("HashSHA256", result)
 		}
 		res.Header().Set("Content-Type", storage.JSONContentType)
 		res.WriteHeader(http.StatusOK)
@@ -208,7 +209,8 @@ func (st *StorageHandler) HandleJSONGetMetrics(flag storage.Flags) http.Handler 
 						return
 					}
 					if len(flag.FlagKey) > 0 {
-						res.Header().Set("HashSHA256", string(storage.ShaMetrics(string(resp), flag.FlagKey)))
+						result, _ := st.Storage.GetStoredMetrics(metric.ID, strings.ToLower(metric.MType))
+						res.Header().Set("HashSHA256", result)
 					}
 					res.Write(resp)
 				case storage.GuageType:
@@ -224,7 +226,8 @@ func (st *StorageHandler) HandleJSONGetMetrics(flag storage.Flags) http.Handler 
 						return
 					}
 					if len(flag.FlagKey) > 0 {
-						res.Header().Set("HashSHA256", string(storage.ShaMetrics(string(resp), flag.FlagKey)))
+						result, _ := st.Storage.GetStoredMetrics(metric.ID, strings.ToLower(metric.MType))
+						res.Header().Set("HashSHA256", result)
 					}
 					res.Write(resp)
 				default:
