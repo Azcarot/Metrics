@@ -40,7 +40,6 @@ func Makepath(m storage.MemStorage, a string) []string {
 	return path
 }
 func MakeSHA(b []byte, k string) []byte {
-
 	key := []byte(k)
 	// создаём новый hash.Hash, вычисляющий контрольную сумму SHA-256
 	h := hmac.New(sha256.New, key)
@@ -52,6 +51,7 @@ func MakeSHA(b []byte, k string) []byte {
 }
 
 func MakeJSON(m storage.MemStorage) ([][]byte, []byte) {
+
 	var body [][]byte
 	var metric storage.Metrics
 	var metrics []storage.Metrics

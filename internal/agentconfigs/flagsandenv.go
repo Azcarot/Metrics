@@ -39,6 +39,7 @@ func parseFlags() *AgentData {
 	flagData.Pollint = time.Duration(agentFlags.pollinterval)
 	flagData.Reportint = agentFlags.reportInterval
 	flagData.Addr = agentFlags.flagAddr
+	flagData.HashKey = agentFlags.hashKey
 	return &flagData
 }
 
