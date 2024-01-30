@@ -24,7 +24,7 @@ func AgentWorkers(data WorkerData, results chan<- *http.Response) {
 	resp, err := PostJSONMetrics(data.BodyJSON, data.Batchrout, data.AgentflagData)
 	for err != nil {
 		if sendAttempts == 0 {
-			defer resp.Body.Close()
+			resp.Body.Close()
 			panic(err)
 		}
 
@@ -32,7 +32,7 @@ func AgentWorkers(data WorkerData, results chan<- *http.Response) {
 		time.Sleep(times * time.Second)
 		sendAttempts -= 1
 		timeBeforeAttempt += 2
-		defer resp.Body.Close()
+		resp.Body.Close()
 		resp, err = PostJSONMetrics(data.BodyJSON, data.Batchrout, data.AgentflagData)
 		if err != nil {
 			resp.Body.Close()
