@@ -18,12 +18,13 @@ type WorkerData struct {
 	AgentflagData agentconfigs.AgentData
 }
 
-func AgentWorkers(data WorkerData) {
+func AgentWorkers(data WorkerData, results chan<- *http.Response) {
 	sendAttempts := 3
 	timeBeforeAttempt := 1
-	_, err := PostJSONMetrics(data.BodyJSON, data.Batchrout, data.AgentflagData)
+	resp, err := PostJSONMetrics(data.BodyJSON, data.Batchrout, data.AgentflagData)
 	for err != nil {
 		if sendAttempts == 0 {
+			defer resp.Body.Close()
 			panic(err)
 		}
 
@@ -31,16 +32,22 @@ func AgentWorkers(data WorkerData) {
 		time.Sleep(times * time.Second)
 		sendAttempts -= 1
 		timeBeforeAttempt += 2
-		resp, err := PostJSONMetrics(data.BodyJSON, data.Batchrout, data.AgentflagData)
+		defer resp.Body.Close()
+		resp, err = PostJSONMetrics(data.BodyJSON, data.Batchrout, data.AgentflagData)
 		if err != nil {
+			resp.Body.Close()
 			panic(err)
 		}
 		defer resp.Body.Close()
 
 	}
 	for _, buf := range data.Body {
-		PostJSONMetrics(buf, data.Singlerout, data.AgentflagData)
+		resp, _ = PostJSONMetrics(buf, data.Singlerout, data.AgentflagData)
+		defer resp.Body.Close()
 	}
+	resp.Body.Close()
+	results <- resp
+	close(results)
 }
 
 func PostJSONMetrics(b []byte, a string, f agentconfigs.AgentData) (*http.Response, error) {

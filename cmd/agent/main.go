@@ -1,6 +1,7 @@
 package main
 
 import (
+	"net/http"
 	"time"
 
 	"github.com/Azcarot/Metrics/internal/agentconfigs"
@@ -25,11 +26,12 @@ func main() {
 	for {
 		select {
 		case <-reporttimer:
+			result := make(chan *http.Response, agentflagData.RateLimit)
 			body, bodyJSON := agentconfigs.MakeJSON(metric)
 			workerData.Body = body
 			workerData.BodyJSON = bodyJSON
 			for w := 0; w <= agentflagData.RateLimit; w++ {
-				go handlers.AgentWorkers(workerData)
+				go handlers.AgentWorkers(workerData, result)
 			}
 			reporttimer = time.After(reporttime)
 		default:
