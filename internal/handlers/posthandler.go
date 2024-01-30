@@ -26,7 +26,7 @@ func AgentWorkers(data WorkerData, results chan<- *http.Response) {
 		if sendAttempts == 0 {
 			panic(err)
 		}
-
+		defer resp.Body.Close()
 		times := time.Duration(timeBeforeAttempt)
 		time.Sleep(times * time.Second)
 		sendAttempts -= 1
