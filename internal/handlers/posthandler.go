@@ -42,6 +42,7 @@ func AgentWorkers(data WorkerData, results chan<- *http.Response) {
 		resp.Body.Close()
 
 	}
+	resp.Body.Close()
 	for _, buf := range data.Body {
 		resp, _ = PostJSONMetrics(buf, data.Singlerout, data.AgentflagData)
 		resp.Body.Close()
@@ -59,7 +60,6 @@ func PostJSONMetrics(b []byte, a string, f agentconfigs.AgentData) (*http.Respon
 
 	resp, err := http.NewRequest("POST", pth, bytes.NewBuffer(b))
 	if err != nil {
-		resp.Body.Close()
 		panic(fmt.Sprintf("cannot post %s ", b))
 	}
 
@@ -72,7 +72,7 @@ func PostJSONMetrics(b []byte, a string, f agentconfigs.AgentData) (*http.Respon
 	client := &http.Client{}
 	res, err := client.Do(resp)
 	if err != nil {
-		res.Body.Close()
+		defer res.Body.Close()
 		panic("Cannot Post request")
 	}
 	defer res.Body.Close()
