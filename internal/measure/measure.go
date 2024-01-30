@@ -3,12 +3,17 @@ package measure
 import (
 	"math/rand"
 	"runtime"
+	"strconv"
 
 	"github.com/Azcarot/Metrics/internal/storage"
+	"github.com/shirou/gopsutil/v3/cpu"
+	"github.com/shirou/gopsutil/v3/mem"
 )
 
-func CollectMetrics(m storage.MemStorage) storage.MemStorage {
+func CollectMetrics(results chan<- storage.MemStorage) {
 	var rtm runtime.MemStats
+	var m storage.MemStorage
+
 	runtime.ReadMemStats(&rtm)
 	m.Gaugemem = make(map[string]storage.Gauge)
 	m.Countermem = make(map[string]storage.Counter)
@@ -41,5 +46,23 @@ func CollectMetrics(m storage.MemStorage) storage.MemStorage {
 	m.Gaugemem["Sys"] = storage.Gauge(rtm.Sys)
 	m.Gaugemem["TotalAlloc"] = storage.Gauge(rtm.TotalAlloc)
 	m.Gaugemem["RandomValue"] = storage.Gauge(rand.Float64())
-	return m
+	results <- m
+	defer close(results)
+}
+
+func CollectPSUtilMetrics(results chan<- storage.MemStorage) {
+	var m storage.MemStorage
+	v, _ := mem.VirtualMemory()
+	m.Gaugemem = make(map[string]storage.Gauge)
+	m.Gaugemem["TotalMemory"] = storage.Gauge(v.Total)
+	m.Gaugemem["FreeMemory"] = storage.Gauge(v.Free)
+	result, err := cpu.Percent(0, true)
+	if err == nil {
+		for i := range result {
+			metricName := "CPUutilization" + strconv.Itoa(i)
+			m.Gaugemem[metricName] = storage.Gauge(result[i])
+		}
+	}
+	results <- m
+	defer close(results)
 }

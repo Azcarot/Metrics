@@ -4,10 +4,42 @@ import (
 	"bytes"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/Azcarot/Metrics/internal/agentconfigs"
 	"github.com/Azcarot/Metrics/internal/storage"
 )
+
+type WorkerData struct {
+	Batchrout     string
+	Singlerout    string
+	Body          [][]byte
+	BodyJSON      []byte
+	AgentflagData agentconfigs.AgentData
+}
+
+func AgentWorkers(data WorkerData, results chan<- *http.Response) {
+	sendAttempts := 3
+	timeBeforeAttempt := 1
+	resp, err := PostJSONMetrics(data.BodyJSON, data.Batchrout, data.AgentflagData)
+	for err != nil {
+		if sendAttempts == 0 {
+			panic(err)
+		}
+
+		times := time.Duration(timeBeforeAttempt)
+		time.Sleep(times * time.Second)
+		sendAttempts -= 1
+		timeBeforeAttempt += 2
+		_, err = PostJSONMetrics(data.BodyJSON, data.Batchrout, data.AgentflagData)
+
+	}
+	for _, buf := range data.Body {
+		PostJSONMetrics(buf, data.Singlerout, data.AgentflagData)
+	}
+	results <- resp
+	close(results)
+}
 
 func PostJSONMetrics(b []byte, a string, f agentconfigs.AgentData) (*http.Response, error) {
 	pth := "http://" + a

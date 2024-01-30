@@ -1,6 +1,7 @@
 package main
 
 import (
+	"net/http"
 	"time"
 
 	"github.com/Azcarot/Metrics/internal/agentconfigs"
@@ -10,38 +11,47 @@ import (
 )
 
 func main() {
-	sendAttempts := 3
-	timeBeforeAttempt := 1
+
 	agentflagData := *agentconfigs.SetValues()
-	batchrout := agentflagData.Addr + "/updates/"
-	singlerout := agentflagData.Addr + "/update/"
 	var metric storage.MemStorage
+	metric.Gaugemem = make(map[string]storage.Gauge)
+	metric.Countermem = make(map[string]storage.Counter)
+	var workerData handlers.WorkerData
+
+	workerData.Batchrout = agentflagData.Addr + "/updates/"
+	workerData.Singlerout = agentflagData.Addr + "/update/"
 	sleeptime := time.Duration(agentflagData.Pollint) * time.Second
 	reporttime := time.Duration(agentflagData.Reportint) * time.Second
 	reporttimer := time.After(reporttime)
 	for {
 		select {
 		case <-reporttimer:
+			result := make(chan *http.Response, agentflagData.RateLimit)
 			body, bodyJSON := agentconfigs.MakeJSON(metric)
-			_, err := handlers.PostJSONMetrics(bodyJSON, batchrout, agentflagData)
-			for err != nil {
-				if sendAttempts == 0 {
-					panic(err)
-				}
-				times := time.Duration(timeBeforeAttempt)
-				time.Sleep(times * time.Second)
-				sendAttempts -= 1
-				timeBeforeAttempt += 2
-				_, err = handlers.PostJSONMetrics(bodyJSON, batchrout, agentflagData)
-
-			}
-			for _, buf := range body {
-				handlers.PostJSONMetrics(buf, singlerout, agentflagData)
+			workerData.Body = body
+			workerData.BodyJSON = bodyJSON
+			for w := 0; w <= agentflagData.RateLimit; w++ {
+				go handlers.AgentWorkers(workerData, result)
 			}
 			reporttimer = time.After(reporttime)
 		default:
-
-			metric = measure.CollectMetrics(metric)
+			metrics := make(chan storage.MemStorage)
+			additionalMetrics := make(chan storage.MemStorage)
+			go measure.CollectMetrics(metrics)
+			go measure.CollectPSUtilMetrics(additionalMetrics)
+			for i := range metrics {
+				for id, value := range i.Gaugemem {
+					metric.Gaugemem[id] = value
+				}
+				for id, value := range i.Countermem {
+					metric.Countermem[id] = value
+				}
+			}
+			for i := range additionalMetrics {
+				for id, value := range i.Gaugemem {
+					metric.Gaugemem[id] = value
+				}
+			}
 			time.Sleep(sleeptime)
 		}
 	}
