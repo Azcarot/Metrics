@@ -72,6 +72,7 @@ func PostJSONMetrics(b []byte, a string, f agentconfigs.AgentData) (*http.Respon
 	client := &http.Client{}
 	res, err := client.Do(resp)
 	if err != nil {
+		res.Body.Close()
 		panic("Cannot Post request")
 	}
 	defer res.Body.Close()
