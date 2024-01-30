@@ -53,7 +53,7 @@ func PostJSONMetrics(b []byte, a string, f agentconfigs.AgentData) (*http.Respon
 	if err != nil {
 		panic(fmt.Sprintf("cannot post %s ", b))
 	}
-	defer resp.Body.Close()
+
 	if len(f.HashKey) > 0 {
 		hashedMetrics = agentconfigs.MakeSHA(b, f.HashKey)
 		resp.Header.Add("HashSHA256", hashedMetrics)
@@ -62,6 +62,10 @@ func PostJSONMetrics(b []byte, a string, f agentconfigs.AgentData) (*http.Respon
 	resp.Header.Add("Content-Encoding", "gzip")
 	client := &http.Client{}
 	res, err := client.Do(resp)
+	if err != nil {
+		panic("Cannot Post request")
+	}
+	defer res.Body.Close()
 	return res, err
 }
 
@@ -71,9 +75,12 @@ func PostMetrics(pth string) *http.Response {
 	if err != nil {
 		panic(fmt.Sprintf("cannot post %s ", data))
 	}
-	defer resp.Body.Close()
 	resp.Header.Add("Content-Type", "text/plain")
 	client := &http.Client{}
-	res, _ := client.Do(resp)
+	res, err := client.Do(resp)
+	if err != nil {
+		panic("Cannot Post")
+	}
+	defer res.Body.Close()
 	return res
 }
