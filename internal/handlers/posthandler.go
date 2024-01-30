@@ -39,11 +39,11 @@ func AgentWorkers(data WorkerData, results chan<- *http.Response) {
 		defer resp.Body.Close()
 
 	}
-	defer resp.Body.Close()
 	for _, buf := range data.Body {
 		resp, _ = PostJSONMetrics(buf, data.Singlerout, data.AgentflagData)
 		defer resp.Body.Close()
 	}
+	resp.Body.Close()
 	results <- resp
 	close(results)
 }
