@@ -21,7 +21,7 @@ type WorkerData struct {
 func AgentWorkers(data WorkerData) {
 	sendAttempts := 3
 	timeBeforeAttempt := 1
-	_, err := PostJSONMetrics(data.BodyJSON, data.Batchrout, data.AgentflagData)
+	resp, err := PostJSONMetrics(data.BodyJSON, data.Batchrout, data.AgentflagData)
 	for err != nil {
 		if sendAttempts == 0 {
 			break
@@ -31,11 +31,13 @@ func AgentWorkers(data WorkerData) {
 		sendAttempts -= 1
 		timeBeforeAttempt += 2
 
-		PostJSONMetrics(data.BodyJSON, data.Batchrout, data.AgentflagData)
-
+		resp2, _ := PostJSONMetrics(data.BodyJSON, data.Batchrout, data.AgentflagData)
+		defer resp2.Body.Close()
 	}
+	defer resp.Body.Close()
 	for _, buf := range data.Body {
-		PostJSONMetrics(buf, data.Singlerout, data.AgentflagData)
+		resp3, _ := PostJSONMetrics(buf, data.Singlerout, data.AgentflagData)
+		defer resp3.Body.Close()
 	}
 }
 
