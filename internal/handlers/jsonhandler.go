@@ -3,7 +3,6 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -26,7 +25,6 @@ func (st *StorageHandler) HandleJSONPostMetrics(flag storage.Flags) http.Handler
 		data := buf.Bytes()
 
 		if err = json.Unmarshal(data, &metricData); err != nil {
-			fmt.Println("errorHere3")
 			res.WriteHeader(http.StatusBadRequest)
 			return
 		}
