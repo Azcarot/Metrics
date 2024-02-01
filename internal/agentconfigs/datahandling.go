@@ -13,18 +13,18 @@ import (
 	"github.com/Azcarot/Metrics/internal/storage"
 )
 
-func GzipForAgent(b []byte) []byte {
+func GzipForAgent(b []byte) ([]byte, error) {
 	var w bytes.Buffer
 	gz, err := gzip.NewWriterLevel(&w, gzip.BestSpeed)
 	if err != nil {
-		panic(fmt.Sprintf("cannot make gzip writer %s ", b))
+		return nil, err
 
 	}
 	defer gz.Close()
 	if _, err := gz.Write(b); err != nil {
-		panic(fmt.Sprintf("cannot make gzip %s ", b))
+		return nil, err
 	}
-	return b
+	return b, nil
 }
 
 func Makepath(m storage.MemStorage, a string) []string {

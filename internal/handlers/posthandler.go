@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"bytes"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -21,7 +20,7 @@ type WorkerData struct {
 func AgentWorkers(data WorkerData) {
 	sendAttempts := 3
 	timeBeforeAttempt := 1
-	resp, err := PostJSONMetrics(data.BodyJSON, data.Batchrout, data.AgentflagData)
+	err := PostJSONMetrics(data.BodyJSON, data.Batchrout, data.AgentflagData)
 	for err != nil {
 		if sendAttempts == 0 {
 			break
@@ -31,25 +30,26 @@ func AgentWorkers(data WorkerData) {
 		sendAttempts -= 1
 		timeBeforeAttempt += 2
 
-		resp2, _ := PostJSONMetrics(data.BodyJSON, data.Batchrout, data.AgentflagData)
-		defer resp2.Body.Close()
+		PostJSONMetrics(data.BodyJSON, data.Batchrout, data.AgentflagData)
+
 	}
-	defer resp.Body.Close()
+
 	for _, buf := range data.Body {
-		resp3, _ := PostJSONMetrics(buf, data.Singlerout, data.AgentflagData)
-		defer resp3.Body.Close()
+		PostJSONMetrics(buf, data.Singlerout, data.AgentflagData)
 	}
 }
 
-func PostJSONMetrics(b []byte, a string, f agentconfigs.AgentData) (*http.Response, error) {
+func PostJSONMetrics(b []byte, a string, f agentconfigs.AgentData) error {
 	pth := "http://" + a
 	var hashedMetrics string
-
-	b = agentconfigs.GzipForAgent(b)
-
+	var err error
+	b, err = agentconfigs.GzipForAgent(b)
+	if err != nil {
+		return err
+	}
 	resp, err := http.NewRequest("POST", pth, bytes.NewBuffer(b))
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if len(f.HashKey) > 0 {
@@ -62,24 +62,8 @@ func PostJSONMetrics(b []byte, a string, f agentconfigs.AgentData) (*http.Respon
 	res, err := client.Do(resp)
 	if err != nil {
 		defer res.Body.Close()
-		return nil, err
+		return err
 	}
 	defer res.Body.Close()
-	return res, err
-}
-
-func PostMetrics(pth string) *http.Response {
-	data := []byte(pth)
-	resp, err := http.NewRequest("POST", pth, bytes.NewBuffer(data))
-	if err != nil {
-		panic(fmt.Sprintf("cannot post %s ", data))
-	}
-	resp.Header.Add("Content-Type", "text/plain")
-	client := &http.Client{}
-	res, err := client.Do(resp)
-	if err != nil {
-		panic("Cannot Post")
-	}
-	defer res.Body.Close()
-	return res
+	return err
 }
