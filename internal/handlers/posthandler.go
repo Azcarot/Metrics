@@ -61,7 +61,6 @@ func PostJSONMetrics(b []byte, a string, f agentconfigs.AgentData) error {
 	client := &http.Client{}
 	res, err := client.Do(resp)
 	if err != nil {
-		defer res.Body.Close()
 		return err
 	}
 	defer res.Body.Close()
