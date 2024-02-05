@@ -29,7 +29,7 @@ func GetCheck(flag storage.Flags) func(http.Handler) http.Handler {
 				if len(key) > 0 {
 					expected, err := base64.URLEncoding.DecodeString(key)
 					if err != nil {
-						panic(err)
+						http.Error(w, err.Error(), http.StatusInternalServerError)
 					}
 					data := buff
 					key := []byte(flag.FlagKey)
