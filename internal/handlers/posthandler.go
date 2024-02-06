@@ -2,35 +2,67 @@ package handlers
 
 import (
 	"bytes"
-	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/Azcarot/Metrics/internal/agentconfigs"
 	"github.com/Azcarot/Metrics/internal/storage"
 )
 
-func PostJSONMetrics(b []byte, a string) (*http.Response, error) {
+type WorkerData struct {
+	Batchrout     string
+	Singlerout    string
+	Body          [][]byte
+	BodyJSON      []byte
+	AgentflagData agentconfigs.AgentData
+}
+
+func AgentWorkers(data WorkerData) {
+	sendAttempts := 3
+	timeBeforeAttempt := 1
+	err := PostJSONMetrics(data.BodyJSON, data.Batchrout, data.AgentflagData)
+	for err != nil {
+		if sendAttempts == 0 {
+			break
+		}
+		times := time.Duration(timeBeforeAttempt)
+		time.Sleep(times * time.Second)
+		sendAttempts -= 1
+		timeBeforeAttempt += 2
+
+		PostJSONMetrics(data.BodyJSON, data.Batchrout, data.AgentflagData)
+
+	}
+
+	for _, buf := range data.Body {
+		PostJSONMetrics(buf, data.Singlerout, data.AgentflagData)
+	}
+}
+
+func PostJSONMetrics(b []byte, a string, f agentconfigs.AgentData) error {
 	pth := "http://" + a
-	b = agentconfigs.GzipForAgent(b)
+	var hashedMetrics string
+	var err error
+	b, err = agentconfigs.GzipForAgent(b)
+	if err != nil {
+		return err
+	}
 	resp, err := http.NewRequest("POST", pth, bytes.NewBuffer(b))
 	if err != nil {
-		panic(fmt.Sprintf("cannot post %s ", b))
+		return err
+	}
+
+	if len(f.HashKey) > 0 {
+		hashedMetrics = agentconfigs.MakeSHA(b, f.HashKey)
+		resp.Header.Add("HashSHA256", hashedMetrics)
 	}
 	resp.Header.Add("Content-Type", storage.JSONContentType)
 	resp.Header.Add("Content-Encoding", "gzip")
 	client := &http.Client{}
 	res, err := client.Do(resp)
-	return res, err
-}
-
-func PostMetrics(pth string) *http.Response {
-	data := []byte(pth)
-	resp, err := http.NewRequest("POST", pth, bytes.NewBuffer(data))
 	if err != nil {
-		panic(fmt.Sprintf("cannot post %s ", data))
+		return err
 	}
-	resp.Header.Add("Content-Type", "text/plain")
-	client := &http.Client{}
-	res, _ := client.Do(resp)
-	return res
+	defer res.Body.Close()
+	return err
 }

@@ -1,6 +1,9 @@
 package storage
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/base64"
 	"errors"
 	"log"
 	"strconv"
@@ -25,6 +28,7 @@ type Flags struct {
 	FlagFileStorage   string
 	FlagRestore       bool
 	FlagDBAddr        string
+	FlagKey           string
 }
 
 type ServerENV struct {
@@ -33,6 +37,7 @@ type ServerENV struct {
 	FileStorage   string `env:"FILE_STORAGE_PATH"`
 	Restore       bool   `env:"RESTORE"`
 	DBAddress     string `env:"DATABASE_DSN"`
+	Key           string `env:"KEY"`
 }
 
 type AllowedMetrics struct {
@@ -174,6 +179,19 @@ func (m *MemStorage) GetStoredMetrics(n string, t string) (string, error) {
 		return "", errors.New("wrong type")
 	}
 	return result, err
+}
+
+func ShaMetrics(result string, key string) string {
+	b := []byte(result)
+	shakey := []byte(key)
+	// создаём новый hash.Hash, вычисляющий контрольную сумму SHA-256
+	h := hmac.New(sha256.New, shakey)
+	// передаём байты для хеширования
+	h.Write(b)
+	// вычисляем хеш
+	hash := h.Sum(nil)
+	sha := base64.URLEncoding.EncodeToString(hash)
+	return string(sha)
 }
 
 var MetricNameTypes = map[string]string{

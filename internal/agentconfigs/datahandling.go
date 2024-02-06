@@ -3,6 +3,9 @@ package agentconfigs
 import (
 	"bytes"
 	"compress/gzip"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -10,18 +13,18 @@ import (
 	"github.com/Azcarot/Metrics/internal/storage"
 )
 
-func GzipForAgent(b []byte) []byte {
+func GzipForAgent(b []byte) ([]byte, error) {
 	var w bytes.Buffer
 	gz, err := gzip.NewWriterLevel(&w, gzip.BestSpeed)
 	if err != nil {
-		panic(fmt.Sprintf("cannot make gzip writer %s ", b))
+		return nil, err
 
 	}
 	defer gz.Close()
 	if _, err := gz.Write(b); err != nil {
-		panic(fmt.Sprintf("cannot make gzip %s ", b))
+		return nil, err
 	}
-	return b
+	return b, nil
 }
 
 func Makepath(m storage.MemStorage, a string) []string {
@@ -37,8 +40,20 @@ func Makepath(m storage.MemStorage, a string) []string {
 	}
 	return path
 }
+func MakeSHA(b []byte, k string) string {
+	key := []byte(k)
+	// создаём новый hash.Hash, вычисляющий контрольную сумму SHA-256
+	h := hmac.New(sha256.New, key)
+	// передаём байты для хеширования
+	h.Write(b)
+	// вычисляем хеш
+	hash := h.Sum(nil)
+	result := base64.URLEncoding.EncodeToString(hash)
+	return result
+}
 
 func MakeJSON(m storage.MemStorage) ([][]byte, []byte) {
+
 	var body [][]byte
 	var metric storage.Metrics
 	var metrics []storage.Metrics
