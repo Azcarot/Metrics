@@ -45,37 +45,29 @@ type AllowedMetrics struct {
 }
 type MemInteractions interface {
 	GetStoredMetrics(string, string) (string, error)
-	StoreMetrics(string, string, string) error
+	StoreMetrics(data Metrics) error
 	GetAllMetrics() string
 	ReadMetricsFromFile(string)
 	GetAllMetricsAsMetricType() []Metrics
 }
 
-func (m *MemStorage) StoreMetrics(n, t, v string) error {
+func (m *MemStorage) StoreMetrics(data Metrics) error {
 
-	switch t {
+	switch data.MType {
 	case GuageType:
 		if storedData.Gaugemem == nil {
 			storedData.Gaugemem = make(map[string]Gauge)
 		}
-		value, err := strconv.ParseFloat(v, 64)
-		if err != nil {
-			return err
-		}
-		newvalue := Gauge(value)
-		m.Gaugemem[n] = newvalue
-		storedData.Gaugemem[n] = newvalue
+
+		m.Gaugemem[data.ID] = Gauge(*data.Value)
+		storedData.Gaugemem[data.ID] = m.Gaugemem[data.ID]
 	case CounterType:
 		if storedData.Countermem == nil {
 			storedData.Countermem = make(map[string]Counter)
 		}
-		value, err := strconv.Atoi(v)
-		if err != nil {
-			return err
-		}
-		newvalue := Counter(value)
-		m.Countermem[n] += newvalue
-		storedData.Countermem[n] += newvalue
+		delta := Counter(*data.Delta)
+		m.Countermem[data.ID] += delta
+		storedData.Countermem[data.ID] += delta
 	}
 	return nil
 }
@@ -192,35 +184,4 @@ func ShaMetrics(result string, key string) string {
 	hash := h.Sum(nil)
 	sha := base64.URLEncoding.EncodeToString(hash)
 	return string(sha)
-}
-
-var MetricNameTypes = map[string]string{
-	"PollCount":     CounterType,
-	"Frees":         GuageType,
-	"GCSys":         GuageType,
-	"HeapAlloc":     GuageType,
-	"HeapIdle":      GuageType,
-	"HeapInuse":     GuageType,
-	"HeapObjects":   GuageType,
-	"HeapReleased":  GuageType,
-	"HeapSys":       GuageType,
-	"LastGC":        GuageType,
-	"Lookups":       GuageType,
-	"MCacheInuse":   GuageType,
-	"MCacheSys":     GuageType,
-	"MSpanInuse":    GuageType,
-	"MSpanSys":      GuageType,
-	"Alloc":         GuageType,
-	"GCCPUFraction": GuageType,
-	"NextGC":        GuageType,
-	"Mallocs":       GuageType,
-	"NumForcedGC":   GuageType,
-	"NumGC":         GuageType,
-	"OtherSys":      GuageType,
-	"PauseTotalNs":  GuageType,
-	"StackInuse":    GuageType,
-	"StackSys":      GuageType,
-	"Sys":           GuageType,
-	"TotalAlloc":    GuageType,
-	"RandomValue":   GuageType,
 }

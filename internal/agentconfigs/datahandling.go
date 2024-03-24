@@ -14,7 +14,7 @@ import (
 )
 
 func GzipForAgent(b []byte) ([]byte, error) {
-	var w bytes.Buffer
+	w := *bytes.NewBuffer(make([]byte, 0, len(b)))
 	gz, err := gzip.NewWriterLevel(&w, gzip.BestSpeed)
 	if err != nil {
 		return nil, err
