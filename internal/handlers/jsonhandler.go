@@ -34,7 +34,7 @@ func (st *StorageHandler) HandleJSONPostMetrics(flag storage.Flags) http.Handler
 			return
 		}
 		if len(flag.FlagDBAddr) != 0 {
-			storage.WriteMetricsToPstgrs(storage.DB, metricData, metricData.MType)
+			storage.PgxStorage.WriteMetricsToPstgrs(storage.ST, metricData, metricData.MType)
 		}
 
 		if len(flag.FlagFileStorage) != 0 && flag.FlagStoreInterval == 0 {
@@ -101,9 +101,14 @@ func (st *StorageHandler) HandleMultipleJSONPostMetrics(flag storage.Flags) http
 			res.WriteHeader(http.StatusBadRequest)
 			return
 		}
-
+		for _, metric := range metrics {
+			if strings.ToLower(metric.MType) != storage.CounterType && strings.ToLower(metric.MType) != storage.GuageType {
+				res.WriteHeader(http.StatusBadRequest)
+				return
+			}
+		}
 		if flag.FlagDBAddr != "" {
-			err := storage.BatchWriteToPstgrs(storage.DB, metrics)
+			err := storage.ST.BatchWriteToPstgrs(metrics)
 			if err != nil {
 				res.WriteHeader(http.StatusInternalServerError)
 				return

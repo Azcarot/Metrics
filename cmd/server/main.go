@@ -20,8 +20,8 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		storage.CheckDBConnection(storage.DB)
-		storage.CreateTablesForMetrics(storage.DB)
+		storage.ST.CheckDBConnection()
+		storage.ST.CreateTablesForMetrics()
 		defer storage.DB.Close(context.Background())
 	}
 	r := handlers.MakeRouter(flag)

@@ -7,7 +7,8 @@ import (
 
 	"io"
 
-	"github.com/Azcarot/Metrics/internal/serverconfigs"
+	"github.com/Azcarot/Metrics/internal/storage"
+	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -28,8 +29,16 @@ func testRequest(t *testing.T, ts *httptest.Server, method,
 }
 
 func TestHandlePostMetrics(t *testing.T) {
-	flags := serverconfigs.ParseFlagsAndENV()
-	ts := httptest.NewServer(MakeRouter(flags))
+	r := chi.NewRouter()
+	Storagehandler = StorageHandler{
+		Storage: &storage.MemStorage{
+			Gaugemem: make(map[string]storage.Gauge), Countermem: make(map[string]storage.Counter)},
+	}
+
+	r.Route("/", func(r chi.Router) {
+		r.Post("/update/{type}/{name}/{value}", Storagehandler.HandlePostMetrics().ServeHTTP)
+	})
+	ts := httptest.NewServer(r)
 	defer ts.Close()
 	var testTable = []struct {
 		url    string
@@ -40,6 +49,9 @@ func TestHandlePostMetrics(t *testing.T) {
 		{"/update/gauge/testgauge/44", "", http.StatusOK},
 		// проверим на ошибочный запрос
 		{"/update/fail/fail/3", "", http.StatusBadRequest},
+		{"/update//testgauge/3", "", http.StatusBadRequest},
+		{"/update/gauge//3", "", http.StatusBadRequest},
+		{"/update/gauge/testgauge/data", "", http.StatusBadRequest},
 	}
 	for _, v := range testTable {
 		resp, get := testRequest(t, ts, "POST", v.url)

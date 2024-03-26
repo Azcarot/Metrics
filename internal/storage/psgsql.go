@@ -13,10 +13,27 @@ import (
 )
 
 var DB *pgx.Conn
+var ST PgxStorage
 
+type PgxStorage interface {
+	WriteMetricsToPstgrs(data Metrics, t string)
+	BatchWriteToPstgrs(data []Metrics) error
+	CheckDBConnection() http.Handler
+	CreateTablesForMetrics()
+}
 type pgxConnTime struct {
 	attempts          int
 	timeBeforeAttempt int
+}
+
+type SQLStore struct {
+	DB *pgx.Conn
+}
+
+func MakeStore(db *pgx.Conn) PgxStorage {
+	return &SQLStore{
+		DB: db,
+	}
 }
 
 func NewConn(f Flags) error {
@@ -44,17 +61,19 @@ func NewConn(f Flags) error {
 	}
 	return nil
 }
+
 func connectToDB(f Flags) error {
 	var err error
 	ps := fmt.Sprintf(f.FlagDBAddr)
 	DB, err = pgx.Connect(context.Background(), ps)
+	ST = MakeStore(DB)
 	return err
 }
 
-func CheckDBConnection(db *pgx.Conn) http.Handler {
+func (db *SQLStore) CheckDBConnection() http.Handler {
 	checkConnection := func(res http.ResponseWriter, req *http.Request) {
 
-		err := DB.Ping(context.Background())
+		err := db.DB.Ping(context.Background())
 		result := (err == nil)
 		if result {
 			res.WriteHeader(http.StatusOK)
@@ -66,17 +85,17 @@ func CheckDBConnection(db *pgx.Conn) http.Handler {
 	return http.HandlerFunc(checkConnection)
 }
 
-func CreateTablesForMetrics(db *pgx.Conn) {
+func (db *SQLStore) CreateTablesForMetrics() {
 	query := `CREATE TABLE IF NOT EXISTS metrics (name text, type text, gauge_value double precision default NULL, counter_value int default NULL )`
 	queryForFun := `DROP TABLE IF EXISTS metrics CASCADE`
 	ctx := context.Background()
-	_, err := db.Exec(ctx, queryForFun)
+	_, err := db.DB.Exec(ctx, queryForFun)
 	if err != nil {
 
 		log.Printf("Error %s when Droping product table", err)
 
 	}
-	_, err = db.Exec(ctx, query)
+	_, err = db.DB.Exec(ctx, query)
 
 	if err != nil {
 
@@ -86,21 +105,21 @@ func CreateTablesForMetrics(db *pgx.Conn) {
 
 }
 
-func WriteMetricsToPstgrs(db *pgx.Conn, data Metrics, t string) {
+func (db *SQLStore) WriteMetricsToPstgrs(data Metrics, t string) {
 	ctx := context.Background()
 	switch t {
 	case "gauge":
-		db.Exec(ctx, `insert into metrics (name, type, gauge_value) values ($1, $2, $3);`, data.ID, data.MType, data.Value)
+		db.DB.Exec(ctx, `insert into metrics (name, type, gauge_value) values ($1, $2, $3);`, data.ID, data.MType, data.Value)
 	case "counter":
-		db.Exec(ctx, `INSERT INTO metrics (name, type, counter_value) VALUES ($1, $2, $3);`, data.ID, data.MType, data.Delta)
+		db.DB.Exec(ctx, `INSERT INTO metrics (name, type, counter_value) VALUES ($1, $2, $3);`, data.ID, data.MType, data.Delta)
 	default:
 		return
 	}
 
 }
 
-func BatchWriteToPstgrs(db *pgx.Conn, data []Metrics) error {
-	copyCount, queryErr := db.CopyFrom(
+func (db *SQLStore) BatchWriteToPstgrs(data []Metrics) error {
+	copyCount, queryErr := db.DB.CopyFrom(
 		context.Background(),
 		pgx.Identifier{"metrics"},
 		[]string{"name", "type", "counter_value", "gauge_value"},
