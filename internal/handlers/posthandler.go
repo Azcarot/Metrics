@@ -17,6 +17,9 @@ type WorkerData struct {
 	AgentflagData agentconfigs.AgentData
 }
 
+// AgentWorkers отправляет собранные метрики на сервер,
+// путь к серверу определяется соответствующим флагом в agentconfigs.AgentData
+// осуществляет 3 попытки отправки, отправляет запрос раз в секунду
 func AgentWorkers(data WorkerData) {
 	sendAttempts := 3
 	timeBeforeAttempt := 1
@@ -39,6 +42,9 @@ func AgentWorkers(data WorkerData) {
 	}
 }
 
+// PostJSONMetrics формирует и отправляет запрос с полученной метрикой на сервер
+// Адрес сервера определяется строкой a
+// при наличии флага HashKey кодирует отправляемую метрику в sha256
 func PostJSONMetrics(b []byte, a string, f agentconfigs.AgentData) error {
 	pth := "http://" + a
 	var hashedMetrics string

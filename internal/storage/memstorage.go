@@ -10,7 +10,10 @@ import (
 	"strings"
 )
 
+// Константа определяющая тип gauge
 const GuageType = "gauge"
+
+// Константа определяющая тип counter
 const CounterType = "counter"
 
 type Gauge float64
@@ -22,6 +25,7 @@ type MemStorage struct {
 
 var storedData MemStorage
 
+// Все возможные флаги
 type Flags struct {
 	FlagAddr          string
 	FlagStoreInterval int
@@ -31,6 +35,7 @@ type Flags struct {
 	FlagKey           string
 }
 
+// Переменные окружения
 type ServerENV struct {
 	Address       string `env:"ADDRESS"`
 	StoreInterval string `env:"STORE_INTERVAL"`
@@ -43,43 +48,43 @@ type ServerENV struct {
 type AllowedMetrics struct {
 	Name string
 }
+
+// Интерфейс для работы с хранилищем
 type MemInteractions interface {
 	GetStoredMetrics(string, string) (string, error)
-	StoreMetrics(string, string, string) error
+	StoreMetrics(data Metrics) error
 	GetAllMetrics() string
 	ReadMetricsFromFile(string)
 	GetAllMetricsAsMetricType() []Metrics
 }
 
-func (m *MemStorage) StoreMetrics(n, t, v string) error {
+// StoreMetrics сохраняет метрику во внутренней памяти
+func (m *MemStorage) StoreMetrics(data Metrics) error {
 
-	switch t {
+	switch data.MType {
 	case GuageType:
 		if storedData.Gaugemem == nil {
 			storedData.Gaugemem = make(map[string]Gauge)
 		}
-		value, err := strconv.ParseFloat(v, 64)
-		if err != nil {
-			return err
-		}
-		newvalue := Gauge(value)
-		m.Gaugemem[n] = newvalue
-		storedData.Gaugemem[n] = newvalue
+
+		m.Gaugemem[data.ID] = Gauge(*data.Value)
+		storedData.Gaugemem[data.ID] = m.Gaugemem[data.ID]
 	case CounterType:
 		if storedData.Countermem == nil {
 			storedData.Countermem = make(map[string]Counter)
 		}
-		value, err := strconv.Atoi(v)
-		if err != nil {
-			return err
-		}
-		newvalue := Counter(value)
-		m.Countermem[n] += newvalue
-		storedData.Countermem[n] += newvalue
+		delta := Counter(*data.Delta)
+		m.Countermem[data.ID] += delta
+		storedData.Countermem[data.ID] += delta
+	default:
+		return errors.New("wrong type")
 	}
+
 	return nil
 }
 
+// ReadMetricsFromFile читает метрики из файла во внутреннюю память,
+// принимает строку с именем файла с метриками
 func (m *MemStorage) ReadMetricsFromFile(filename string) {
 	storedData.Gaugemem = make(map[string]Gauge)
 	storedData.Countermem = make(map[string]Counter)
@@ -120,6 +125,8 @@ func WriteToFile(f string, mdata Metrics) {
 	}
 }
 
+// GetAllMetricsAsMetricType читает все метрики из внутренней памяти,
+// функция выдает все сохраненные метрики в виде слайса типа Metrics
 func (m *MemStorage) GetAllMetricsAsMetricType() []Metrics {
 	var FinalData []Metrics
 	for n, v := range m.Gaugemem {
@@ -141,6 +148,8 @@ func (m *MemStorage) GetAllMetricsAsMetricType() []Metrics {
 	return FinalData
 }
 
+// GetAllMetrics читает все метрики из внутренней памяти,
+// функция возвращает строку с данными метрик
 func (m *MemStorage) GetAllMetrics() string {
 	var result string
 	for n, v := range m.Gaugemem {
@@ -155,6 +164,9 @@ func (m *MemStorage) GetAllMetrics() string {
 	return result
 }
 
+// GetStoredMetrics производит чтение конкретной метрики из внутренней памяти,
+// метрика ищется по имени и типу,
+// если метрика найдена, возвращается ее значение в виду строки
 func (m *MemStorage) GetStoredMetrics(n string, t string) (string, error) {
 	var result string
 	var err error
@@ -181,6 +193,7 @@ func (m *MemStorage) GetStoredMetrics(n string, t string) (string, error) {
 	return result, err
 }
 
+// ShaMetrics кодирует метрики в sh256 по переданному ключу
 func ShaMetrics(result string, key string) string {
 	b := []byte(result)
 	shakey := []byte(key)
@@ -192,35 +205,4 @@ func ShaMetrics(result string, key string) string {
 	hash := h.Sum(nil)
 	sha := base64.URLEncoding.EncodeToString(hash)
 	return string(sha)
-}
-
-var MetricNameTypes = map[string]string{
-	"PollCount":     CounterType,
-	"Frees":         GuageType,
-	"GCSys":         GuageType,
-	"HeapAlloc":     GuageType,
-	"HeapIdle":      GuageType,
-	"HeapInuse":     GuageType,
-	"HeapObjects":   GuageType,
-	"HeapReleased":  GuageType,
-	"HeapSys":       GuageType,
-	"LastGC":        GuageType,
-	"Lookups":       GuageType,
-	"MCacheInuse":   GuageType,
-	"MCacheSys":     GuageType,
-	"MSpanInuse":    GuageType,
-	"MSpanSys":      GuageType,
-	"Alloc":         GuageType,
-	"GCCPUFraction": GuageType,
-	"NextGC":        GuageType,
-	"Mallocs":       GuageType,
-	"NumForcedGC":   GuageType,
-	"NumGC":         GuageType,
-	"OtherSys":      GuageType,
-	"PauseTotalNs":  GuageType,
-	"StackInuse":    GuageType,
-	"StackSys":      GuageType,
-	"Sys":           GuageType,
-	"TotalAlloc":    GuageType,
-	"RandomValue":   GuageType,
 }
