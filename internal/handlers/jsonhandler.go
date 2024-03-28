@@ -10,6 +10,9 @@ import (
 	"github.com/Azcarot/Metrics/internal/storage"
 )
 
+// HandleJSONPostMetrics обрабатывает запросы на запись единичной метрики, принятой в виде JSON
+// Метрики всегда пишутся во внутренную память, а запись их в файл
+// или бд определяется соответствующими флагами
 func (st *StorageHandler) HandleJSONPostMetrics(flag storage.Flags) http.Handler {
 	var metricData storage.Metrics
 	var metricResult storage.Metrics
@@ -34,7 +37,7 @@ func (st *StorageHandler) HandleJSONPostMetrics(flag storage.Flags) http.Handler
 			return
 		}
 		if len(flag.FlagDBAddr) != 0 {
-			storage.PgxStorage.WriteMetricsToPstgrs(storage.ST, metricData, metricData.MType)
+			storage.PgxStorage.WriteMetricsToPstgrs(storage.ST, metricData)
 		}
 
 		if len(flag.FlagFileStorage) != 0 && flag.FlagStoreInterval == 0 {
@@ -88,6 +91,10 @@ func (st *StorageHandler) HandleJSONPostMetrics(flag storage.Flags) http.Handler
 	return http.HandlerFunc(postMetric)
 }
 
+// HandleMultipleJSONPostMetrics обрабатывает запросы
+// на запись множества метрик, принятых в виде JSON
+// Метрики всегда пишутся во внутренную память, а запись их в файл
+// или бд определяется соответствующими флагами
 func (st *StorageHandler) HandleMultipleJSONPostMetrics(flag storage.Flags) http.Handler {
 	getMetrics := func(res http.ResponseWriter, req *http.Request) {
 		var metrics []storage.Metrics
@@ -134,6 +141,7 @@ func (st *StorageHandler) HandleMultipleJSONPostMetrics(flag storage.Flags) http
 	return http.HandlerFunc(getMetrics)
 }
 
+// HandleJSONGetMetrics обрабатывает запросы на чтение метрик
 func (st *StorageHandler) HandleJSONGetMetrics(flag storage.Flags) http.Handler {
 
 	getMetric := func(res http.ResponseWriter, req *http.Request) {

@@ -1,3 +1,6 @@
+// Функции и типы для работы со всеми хранилищами данных.
+// В качестве хранилищ данных используется внутренняя память приложения,
+// postgress и хранение данных в файле
 package storage
 
 import (
@@ -16,7 +19,7 @@ var DB *pgx.Conn
 var ST PgxStorage
 
 type PgxStorage interface {
-	WriteMetricsToPstgrs(data Metrics, t string)
+	WriteMetricsToPstgrs(data Metrics)
 	BatchWriteToPstgrs(data []Metrics) error
 	CheckDBConnection() http.Handler
 	CreateTablesForMetrics()
@@ -36,6 +39,8 @@ func MakeStore(db *pgx.Conn) PgxStorage {
 	}
 }
 
+// NewConn создает новый коннект к БД. Функция осуществляет 3 попытки подключиться к
+// бд по полученному из флагов DSN. Ретрай осуществляется каждую секунду
 func NewConn(f Flags) error {
 	var err error
 	var attempts pgxConnTime
@@ -70,6 +75,7 @@ func connectToDB(f Flags) error {
 	return err
 }
 
+// CheckDBConnection проверяет связь с БД
 func (db *SQLStore) CheckDBConnection() http.Handler {
 	checkConnection := func(res http.ResponseWriter, req *http.Request) {
 
@@ -85,17 +91,11 @@ func (db *SQLStore) CheckDBConnection() http.Handler {
 	return http.HandlerFunc(checkConnection)
 }
 
+// CreateTablesForMetrics создает нужные таблиц для сохранения метрик
 func (db *SQLStore) CreateTablesForMetrics() {
 	query := `CREATE TABLE IF NOT EXISTS metrics (name text, type text, gauge_value double precision default NULL, counter_value int default NULL )`
-	queryForFun := `DROP TABLE IF EXISTS metrics CASCADE`
 	ctx := context.Background()
-	_, err := db.DB.Exec(ctx, queryForFun)
-	if err != nil {
-
-		log.Printf("Error %s when Droping product table", err)
-
-	}
-	_, err = db.DB.Exec(ctx, query)
+	_, err := db.DB.Exec(ctx, query)
 
 	if err != nil {
 
@@ -105,9 +105,10 @@ func (db *SQLStore) CreateTablesForMetrics() {
 
 }
 
-func (db *SQLStore) WriteMetricsToPstgrs(data Metrics, t string) {
+// WriteMetricsToPstgrs записывает единичную метрику в БД
+func (db *SQLStore) WriteMetricsToPstgrs(data Metrics) {
 	ctx := context.Background()
-	switch t {
+	switch data.MType {
 	case "gauge":
 		db.DB.Exec(ctx, `insert into metrics (name, type, gauge_value) values ($1, $2, $3);`, data.ID, data.MType, data.Value)
 	case "counter":
@@ -118,6 +119,7 @@ func (db *SQLStore) WriteMetricsToPstgrs(data Metrics, t string) {
 
 }
 
+// BatchWriteToPstgrs записывает в бд сразу группу метрик, принятую в виде слайса типа Metrics
 func (db *SQLStore) BatchWriteToPstgrs(data []Metrics) error {
 	copyCount, queryErr := db.DB.CopyFrom(
 		context.Background(),

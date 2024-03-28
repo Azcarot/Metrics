@@ -1,3 +1,4 @@
+// Сбор системных метрик
 package measure
 
 import (
@@ -10,6 +11,7 @@ import (
 	"github.com/shirou/gopsutil/v3/mem"
 )
 
+// CollectMetrics собирает системные метрики методом runtime.ReadMemStats
 func CollectMetrics(results chan<- storage.MemStorage) {
 	var rtm runtime.MemStats
 	var m storage.MemStorage
@@ -50,6 +52,7 @@ func CollectMetrics(results chan<- storage.MemStorage) {
 	defer close(results)
 }
 
+// CollectPSUtilMetrics собирает метрики пакета gopsUtil
 func CollectPSUtilMetrics(results chan<- storage.MemStorage) {
 	var m storage.MemStorage
 	v, _ := mem.VirtualMemory()

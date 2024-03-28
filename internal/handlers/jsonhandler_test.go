@@ -8,7 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	mock_storage "github.com/Azcarot/Metrics/internal/mock/storage"
+	mock_storage "github.com/Azcarot/Metrics/internal/mock"
 	"github.com/Azcarot/Metrics/internal/storage"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
@@ -37,11 +37,11 @@ func TestStorageHandler_HandleJSONPostMetrics(t *testing.T) {
 		metricData: storage.Metrics{ID: "222", MType: "Gauge", Delta: &delta},
 	}
 	tests[1] = testing{name: "Goodrequest(Gauge Data)", expStatus: 200,
-		wrongRequest: true, flag: storage.Flags{FlagDBAddr: "someDB"},
+		wrongRequest: false, flag: storage.Flags{FlagDBAddr: "someDB"},
 		metricData: storage.Metrics{ID: "222", MType: storage.GuageType, Value: &gauge},
 	}
 	tests[2] = testing{name: "GoodRequest(Counter Data)", expStatus: 200,
-		wrongRequest: true, flag: storage.Flags{FlagDBAddr: "someDB"},
+		wrongRequest: false, flag: storage.Flags{FlagDBAddr: "someDB"},
 		metricData: storage.Metrics{ID: "222", MType: storage.CounterType, Delta: &delta},
 	}
 	tests[3] = testing{name: "BadRequest(No Data)", expStatus: 400,
@@ -56,7 +56,9 @@ func TestStorageHandler_HandleJSONPostMetrics(t *testing.T) {
 		req.data = tt.metricData
 
 		storage.ST = mock
-		mock.EXPECT().WriteMetricsToPstgrs(gomock.Eq(tt.metricData), gomock.Eq(tt.metricData.MType)).Times(1)
+		if !tt.wrongRequest {
+			mock.EXPECT().WriteMetricsToPstgrs(gomock.Eq(tt.metricData)).Times(1)
+		}
 		handler := Storagehandler.HandleJSONPostMetrics(tt.flag)
 		recorder := httptest.NewRecorder()
 		url := "/update/"
@@ -241,7 +243,9 @@ func TestStorageHandler_HandleJSONGetMetrics(t *testing.T) {
 		req.data = tt.metricData
 
 		storage.ST = mock
-		mock.EXPECT().WriteMetricsToPstgrs(gomock.Eq(tt.metricData), gomock.Eq(tt.metricData.MType)).Times(1)
+		if tt.metricData.MType == storage.CounterType || tt.metricData.MType == storage.GuageType {
+			mock.EXPECT().WriteMetricsToPstgrs(gomock.Eq(tt.metricData)).Times(1)
+		}
 		handler := Storagehandler.HandleJSONPostMetrics(tt.flag)
 		recorder := httptest.NewRecorder()
 		url := "/update/"

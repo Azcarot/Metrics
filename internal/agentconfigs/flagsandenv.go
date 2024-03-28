@@ -1,3 +1,4 @@
+// Пакет обработки флагов и переменных окружения
 package agentconfigs
 
 import (
@@ -32,6 +33,7 @@ type AgentENV struct {
 	RateLimit int    `env:"RATE_LIMIT"`
 }
 
+// parseFlags() получает флаги и сохраняет полученные в них данные в структуру AgentData
 func parseFlags() *AgentData {
 	var flagData AgentData
 	flag.StringVar(&agentFlags.flagAddr, "a", "localhost:8080", "address and port to run server")
@@ -47,6 +49,7 @@ func parseFlags() *AgentData {
 	return &flagData
 }
 
+// SetValues обрабатывает как флаги, так и переменные окружение
 // Если указана переменная окружения, то используется она.
 // Если нет переменной окружения, но есть аргумент командной строки (флаг), то используется он.
 // Если нет ни переменной окружения, ни флага, то используется значение по умолчанию.

@@ -76,13 +76,13 @@ func (mr *MockPgxStorageMockRecorder) CreateTablesForMetrics() *gomock.Call {
 }
 
 // WriteMetricsToPstgrs mocks base method.
-func (m *MockPgxStorage) WriteMetricsToPstgrs(arg0 storage.Metrics, arg1 string) {
+func (m *MockPgxStorage) WriteMetricsToPstgrs(arg0 storage.Metrics) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "WriteMetricsToPstgrs", arg0, arg1)
+	m.ctrl.Call(m, "WriteMetricsToPstgrs", arg0)
 }
 
 // WriteMetricsToPstgrs indicates an expected call of WriteMetricsToPstgrs.
-func (mr *MockPgxStorageMockRecorder) WriteMetricsToPstgrs(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockPgxStorageMockRecorder) WriteMetricsToPstgrs(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteMetricsToPstgrs", reflect.TypeOf((*MockPgxStorage)(nil).WriteMetricsToPstgrs), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteMetricsToPstgrs", reflect.TypeOf((*MockPgxStorage)(nil).WriteMetricsToPstgrs), arg0)
 }

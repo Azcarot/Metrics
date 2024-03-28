@@ -1,3 +1,4 @@
+// Основной серверный пакет. Ицидиирует связь с бд, создает роутер и слушает назначенный порт
 package main
 
 import (
@@ -29,20 +30,11 @@ func main() {
 		Addr:    flag.FlagAddr,
 		Handler: r,
 	}
+	//Сервер для pprof
 	go func() {
 		log.Println(http.ListenAndServe(":6060", nil))
 	}()
 	go handlers.GetSignal(server, flag)
 	server.ListenAndServe()
 
-	// // // создаём файл журнала профилирования памяти
-	// fmem, err := os.Create(`.\profiles\base2.pprof`)
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// defer fmem.Close()
-	// runtime.GC() // получаем статистику по использованию памяти
-	// if err := pprof.WriteHeapProfile(fmem); err != nil {
-	// 	panic(err)
-	// }
 }
