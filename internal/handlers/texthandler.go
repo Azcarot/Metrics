@@ -3,6 +3,7 @@ package handlers
 import (
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/Azcarot/Metrics/internal/storage"
@@ -18,7 +19,23 @@ func (st *StorageHandler) HandlePostMetrics() http.Handler {
 		}
 		switch strings.ToLower(chi.URLParam(req, "type")) {
 		case storage.CounterType, storage.GuageType:
-			err := st.Storage.StoreMetrics(chi.URLParam(req, "name"), strings.ToLower(chi.URLParam(req, "type")), chi.URLParam(req, "value"))
+			metricsData := storage.Metrics{ID: chi.URLParam(req, "name"), MType: strings.ToLower(chi.URLParam(req, "type"))}
+			if strings.ToLower(chi.URLParam(req, "type")) == storage.GuageType {
+				value, err := strconv.ParseFloat(chi.URLParam(req, "value"), 64)
+				if err != nil {
+					res.WriteHeader(http.StatusBadRequest)
+					return
+				}
+				metricsData.Value = &value
+			} else if strings.ToLower(chi.URLParam(req, "type")) == storage.CounterType {
+				value, err := strconv.ParseInt(chi.URLParam(req, "value"), 0, 64)
+				if err != nil {
+					res.WriteHeader(http.StatusBadRequest)
+					return
+				}
+				metricsData.Delta = &value
+			}
+			err := st.Storage.StoreMetrics(metricsData)
 			if err != nil {
 				res.WriteHeader(http.StatusBadRequest)
 				return

@@ -1,3 +1,4 @@
+// Обработка исходящих данных от агента
 package agentconfigs
 
 import (
@@ -13,8 +14,9 @@ import (
 	"github.com/Azcarot/Metrics/internal/storage"
 )
 
+// GzipForAgent архивирует метрики через gzip
 func GzipForAgent(b []byte) ([]byte, error) {
-	var w bytes.Buffer
+	w := *bytes.NewBuffer(make([]byte, 0, len(b)))
 	gz, err := gzip.NewWriterLevel(&w, gzip.BestSpeed)
 	if err != nil {
 		return nil, err
@@ -27,6 +29,7 @@ func GzipForAgent(b []byte) ([]byte, error) {
 	return b, nil
 }
 
+// Makepath создает url по которому на сервер отправляются метрики
 func Makepath(m storage.MemStorage, a string) []string {
 	var path []string
 	pathscount := 0
@@ -40,6 +43,8 @@ func Makepath(m storage.MemStorage, a string) []string {
 	}
 	return path
 }
+
+// MakeSHA кодирует данные в sha256
 func MakeSHA(b []byte, k string) string {
 	key := []byte(k)
 	// создаём новый hash.Hash, вычисляющий контрольную сумму SHA-256
@@ -52,6 +57,7 @@ func MakeSHA(b []byte, k string) string {
 	return result
 }
 
+// MakeJSON пакует собранные метрики в JSON
 func MakeJSON(m storage.MemStorage) ([][]byte, []byte) {
 
 	var body [][]byte

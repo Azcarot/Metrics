@@ -10,6 +10,9 @@ import (
 	"github.com/Azcarot/Metrics/internal/storage"
 )
 
+// HandleJSONPostMetrics обрабатывает запросы на запись единичной метрики, принятой в виде JSON
+// Метрики всегда пишутся во внутренную память, а запись их в файл
+// или бд определяется соответствующими флагами
 func (st *StorageHandler) HandleJSONPostMetrics(flag storage.Flags) http.Handler {
 	var metricData storage.Metrics
 	var metricResult storage.Metrics
@@ -28,27 +31,27 @@ func (st *StorageHandler) HandleJSONPostMetrics(flag storage.Flags) http.Handler
 			res.WriteHeader(http.StatusBadRequest)
 			return
 		}
+		err = st.Storage.StoreMetrics(metricData)
+		if err != nil {
+			res.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		if len(flag.FlagDBAddr) != 0 {
+			storage.PgxStorage.WriteMetricsToPstgrs(storage.ST, metricData)
+		}
+
+		if len(flag.FlagFileStorage) != 0 && flag.FlagStoreInterval == 0 {
+			fileName := flag.FlagFileStorage
+			storage.WriteToFile(fileName, metricData)
+		}
+		result, err := st.Storage.GetStoredMetrics(metricData.ID, strings.ToLower(metricData.MType))
+
+		if err != nil {
+			res.WriteHeader(http.StatusBadRequest)
+			return
+		}
 		switch metricData.MType {
 		case storage.CounterType:
-			value := strconv.Itoa(int(*metricData.Delta))
-			err := st.Storage.StoreMetrics(metricData.ID, strings.ToLower(metricData.MType), value)
-			if err != nil {
-				res.WriteHeader(http.StatusBadRequest)
-				return
-			}
-			if len(flag.FlagDBAddr) != 0 {
-				storage.WriteMetricsToPstgrs(storage.DB, metricData, metricData.MType)
-			}
-			if len(flag.FlagFileStorage) != 0 && flag.FlagStoreInterval == 0 {
-				fileName := flag.FlagFileStorage
-				storage.WriteToFile(fileName, metricData)
-			}
-			result, err := st.Storage.GetStoredMetrics(metricData.ID, strings.ToLower(metricData.MType))
-
-			if err != nil {
-				res.WriteHeader(http.StatusBadRequest)
-				return
-			}
 			newvalue, err := strconv.ParseInt(result, 0, 64)
 			if err != nil {
 				res.WriteHeader(http.StatusBadRequest)
@@ -58,26 +61,6 @@ func (st *StorageHandler) HandleJSONPostMetrics(flag storage.Flags) http.Handler
 			metricResult = metricData
 
 		case storage.GuageType:
-			value := strconv.FormatFloat(float64(*metricData.Value), 'g', -1, 64)
-
-			err := st.Storage.StoreMetrics(metricData.ID, strings.ToLower(metricData.MType), value)
-			if err != nil {
-				res.WriteHeader(http.StatusBadRequest)
-				return
-			}
-			if len(flag.FlagDBAddr) != 0 {
-				storage.WriteMetricsToPstgrs(storage.DB, metricData, metricData.MType)
-			}
-			if len(flag.FlagFileStorage) != 0 && flag.FlagStoreInterval == 0 {
-				fileName := flag.FlagFileStorage
-				storage.WriteToFile(fileName, metricData)
-			}
-			result, err := st.Storage.GetStoredMetrics(metricData.ID, strings.ToLower(metricData.MType))
-
-			if err != nil {
-				res.WriteHeader(http.StatusBadRequest)
-				return
-			}
 			newvalue, err := strconv.ParseFloat(result, 64)
 			if err != nil {
 				res.WriteHeader(http.StatusBadRequest)
@@ -85,12 +68,10 @@ func (st *StorageHandler) HandleJSONPostMetrics(flag storage.Flags) http.Handler
 			}
 			metricData.Value = &newvalue
 			metricResult = metricData
-
 		default:
 			res.WriteHeader(http.StatusBadRequest)
 			return
 		}
-
 		resp, err := json.Marshal(metricResult)
 		if err != nil {
 
@@ -110,6 +91,10 @@ func (st *StorageHandler) HandleJSONPostMetrics(flag storage.Flags) http.Handler
 	return http.HandlerFunc(postMetric)
 }
 
+// HandleMultipleJSONPostMetrics обрабатывает запросы
+// на запись множества метрик, принятых в виде JSON
+// Метрики всегда пишутся во внутренную память, а запись их в файл
+// или бд определяется соответствующими флагами
 func (st *StorageHandler) HandleMultipleJSONPostMetrics(flag storage.Flags) http.Handler {
 	getMetrics := func(res http.ResponseWriter, req *http.Request) {
 		var metrics []storage.Metrics
@@ -123,9 +108,14 @@ func (st *StorageHandler) HandleMultipleJSONPostMetrics(flag storage.Flags) http
 			res.WriteHeader(http.StatusBadRequest)
 			return
 		}
-
+		for _, metric := range metrics {
+			if strings.ToLower(metric.MType) != storage.CounterType && strings.ToLower(metric.MType) != storage.GuageType {
+				res.WriteHeader(http.StatusBadRequest)
+				return
+			}
+		}
 		if flag.FlagDBAddr != "" {
-			err := storage.BatchWriteToPstgrs(storage.DB, metrics)
+			err := storage.ST.BatchWriteToPstgrs(metrics)
 			if err != nil {
 				res.WriteHeader(http.StatusInternalServerError)
 				return
@@ -133,39 +123,14 @@ func (st *StorageHandler) HandleMultipleJSONPostMetrics(flag storage.Flags) http
 		}
 		var storeerr error
 		for _, metricData := range metrics {
-			switch metricData.MType {
-
-			case storage.CounterType:
-
-				value := strconv.Itoa(int(*metricData.Delta))
-				storeerr = st.Storage.StoreMetrics(metricData.ID, strings.ToLower(metricData.MType), value)
-				if storeerr != nil {
-
-					break
-				}
-				if len(flag.FlagFileStorage) != 0 && flag.FlagStoreInterval == 0 && flag.FlagDBAddr == "" {
-					fileName := flag.FlagFileStorage
-					storage.WriteToFile(fileName, metricData)
-				}
-
-			case storage.GuageType:
-				value := strconv.FormatFloat(float64(*metricData.Value), 'g', -1, 64)
-
-				storeerr = st.Storage.StoreMetrics(metricData.ID, strings.ToLower(metricData.MType), value)
-				if storeerr != nil {
-
-					break
-				}
-				if len(flag.FlagFileStorage) != 0 && flag.FlagStoreInterval == 0 && flag.FlagDBAddr == "" {
-					fileName := flag.FlagFileStorage
-					storage.WriteToFile(fileName, metricData)
-				}
-
-			default:
-				res.WriteHeader(http.StatusBadRequest)
-				return
+			storeerr = st.Storage.StoreMetrics(metricData)
+			if storeerr != nil {
+				break
 			}
-
+			if len(flag.FlagFileStorage) != 0 && flag.FlagStoreInterval == 0 && flag.FlagDBAddr == "" {
+				fileName := flag.FlagFileStorage
+				storage.WriteToFile(fileName, metricData)
+			}
 		}
 		if storeerr != nil {
 			res.WriteHeader(http.StatusBadRequest)
@@ -176,6 +141,7 @@ func (st *StorageHandler) HandleMultipleJSONPostMetrics(flag storage.Flags) http
 	return http.HandlerFunc(getMetrics)
 }
 
+// HandleJSONGetMetrics обрабатывает запросы на чтение метрик
 func (st *StorageHandler) HandleJSONGetMetrics(flag storage.Flags) http.Handler {
 
 	getMetric := func(res http.ResponseWriter, req *http.Request) {
