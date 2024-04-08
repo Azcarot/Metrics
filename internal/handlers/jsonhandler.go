@@ -52,7 +52,8 @@ func (st *StorageHandler) HandleJSONPostMetrics(flag storage.Flags) http.Handler
 		}
 		switch metricData.MType {
 		case storage.CounterType:
-			newvalue, err := strconv.ParseInt(result, 0, 64)
+			var newvalue int64
+			newvalue, err = strconv.ParseInt(result, 0, 64)
 			if err != nil {
 				res.WriteHeader(http.StatusBadRequest)
 				return
@@ -61,7 +62,8 @@ func (st *StorageHandler) HandleJSONPostMetrics(flag storage.Flags) http.Handler
 			metricResult = metricData
 
 		case storage.GuageType:
-			newvalue, err := strconv.ParseFloat(result, 64)
+			var newvalue float64
+			newvalue, err = strconv.ParseFloat(result, 64)
 			if err != nil {
 				res.WriteHeader(http.StatusBadRequest)
 				return
@@ -178,7 +180,7 @@ func (st *StorageHandler) HandleJSONGetMetrics(flag storage.Flags) http.Handler 
 						return
 					}
 					if len(flag.FlagKey) > 0 {
-						result, _ := st.Storage.GetStoredMetrics(metric.ID, strings.ToLower(metric.MType))
+						result, _ = st.Storage.GetStoredMetrics(metric.ID, strings.ToLower(metric.MType))
 						result = storage.ShaMetrics(result, flag.FlagKey)
 						res.Header().Set("HashSHA256", result)
 					}

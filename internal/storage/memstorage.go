@@ -10,10 +10,10 @@ import (
 	"strings"
 )
 
-// Константа определяющая тип gauge
+// GuageType Константа определяющая тип gauge
 const GuageType = "gauge"
 
-// Константа определяющая тип counter
+// CounterType Константа определяющая тип counter
 const CounterType = "counter"
 
 type Gauge float64
@@ -25,7 +25,7 @@ type MemStorage struct {
 
 var storedData MemStorage
 
-// Все возможные флаги
+// Flags - Все возможные флаги
 type Flags struct {
 	FlagAddr          string
 	FlagStoreInterval int
@@ -35,7 +35,7 @@ type Flags struct {
 	FlagKey           string
 }
 
-// Переменные окружения
+// ServerENV - Переменные окружения
 type ServerENV struct {
 	Address       string `env:"ADDRESS"`
 	StoreInterval string `env:"STORE_INTERVAL"`
@@ -49,7 +49,7 @@ type AllowedMetrics struct {
 	Name string
 }
 
-// Интерфейс для работы с хранилищем
+// MemInteractions - Интерфейс для работы с хранилищем
 type MemInteractions interface {
 	GetStoredMetrics(string, string) (string, error)
 	StoreMetrics(data Metrics) error

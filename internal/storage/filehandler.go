@@ -32,11 +32,12 @@ func NewProducer(fileName string) (*Producer, error) {
 		return nil, err
 	}
 	if !exist {
-		if err := os.MkdirAll(filepath.Dir(fileName), 0777); err != nil {
+		if err = os.MkdirAll(filepath.Dir(fileName), 0777); err != nil {
 			return nil, err
 		}
 	}
-	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
+	var file *os.File
+	file, err = os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
 	if err != nil {
 		return nil, err
 	}
