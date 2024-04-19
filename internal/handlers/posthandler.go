@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"log"
 	"net/http"
 	"time"
 
@@ -23,7 +24,23 @@ type WorkerData struct {
 func AgentWorkers(data WorkerData) {
 	sendAttempts := 3
 	timeBeforeAttempt := 1
-	err := PostJSONMetrics(data.BodyJSON, data.Batchrout, data.AgentflagData)
+	var err error
+	var encryptionKey []byte
+	if data.AgentflagData.CryptoKey != "" {
+		encryptionKey, err = agentconfigs.GetPublicKey(data.AgentflagData.CryptoKey)
+		if err != nil {
+			log.Fatal(err)
+		}
+		data.BodyJSON, err = agentconfigs.CypherData(encryptionKey, data.BodyJSON)
+		if err != nil {
+			log.Fatal(err)
+		}
+		for i, buf := range data.Body {
+			data.Body[i], err = agentconfigs.CypherData(encryptionKey, buf)
+			log.Fatal(err)
+		}
+	}
+	err = PostJSONMetrics(data.BodyJSON, data.Batchrout, data.AgentflagData)
 	for err != nil {
 		if sendAttempts == 0 {
 			break
@@ -61,6 +78,9 @@ func PostJSONMetrics(b []byte, a string, f agentconfigs.AgentData) error {
 	if len(f.HashKey) > 0 {
 		hashedMetrics = agentconfigs.MakeSHA(b, f.HashKey)
 		resp.Header.Add("HashSHA256", hashedMetrics)
+	}
+	if f.CryptoKey != "" {
+		resp.Header.Add("Crypto", "enabled")
 	}
 	resp.Header.Add("Content-Type", storage.JSONContentType)
 	resp.Header.Add("Content-Encoding", "gzip")

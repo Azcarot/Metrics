@@ -23,6 +23,13 @@ var (
 func main() {
 	fmt.Printf("Build version=%s\nBuild date =%s\nBuild commit =%s\n", buildVersion, buildDate, buildCommit)
 	flag := serverconfigs.ParseFlagsAndENV()
+	if flag.FlagCrypto != "" {
+		var err error
+		serverconfigs.PrivateKey, err = serverconfigs.GetPrivateKey(flag.FlagCrypto)
+		if err != nil {
+			panic(err)
+		}
+	}
 	if flag.FlagDBAddr != "" {
 		err := storage.NewConn(flag)
 		if err != nil {

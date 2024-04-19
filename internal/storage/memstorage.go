@@ -33,6 +33,7 @@ type Flags struct {
 	FlagRestore       bool
 	FlagDBAddr        string
 	FlagKey           string
+	FlagCrypto        string
 }
 
 // ServerENV - Переменные окружения
@@ -43,6 +44,7 @@ type ServerENV struct {
 	Restore       bool   `env:"RESTORE"`
 	DBAddress     string `env:"DATABASE_DSN"`
 	Key           string `env:"KEY"`
+	CryptoKey     string `env:"CRYPTO_KEY"`
 }
 
 type AllowedMetrics struct {

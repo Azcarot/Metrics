@@ -1,14 +1,19 @@
-// Обработка исходящих данных от агента
+// Package agentconfigs - Обработка исходящих данных от агента
 package agentconfigs
 
 import (
 	"bytes"
 	"compress/gzip"
 	"crypto/hmac"
+	"crypto/rand"
+	"crypto/rsa"
 	"crypto/sha256"
+	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strconv"
 
 	"github.com/Azcarot/Metrics/internal/storage"
@@ -27,6 +32,25 @@ func GzipForAgent(b []byte) ([]byte, error) {
 		return nil, err
 	}
 	return b, nil
+}
+
+func GetPublicKey(pth string) ([]byte, error) {
+	data, err := os.ReadFile(filepath.Dir(pth))
+	return data, err
+
+}
+
+func CypherData(key []byte, data []byte) ([]byte, error) {
+	var x509Key *rsa.PublicKey
+	x509Key, _ = x509.ParsePKCS1PublicKey(key)
+	encryptedData, err := rsa.EncryptOAEP(
+		sha256.New(),
+		rand.Reader,
+		x509Key,
+		data,
+		nil,
+	)
+	return encryptedData, err
 }
 
 // Makepath создает url по которому на сервер отправляются метрики

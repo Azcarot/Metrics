@@ -1,4 +1,4 @@
-// Пакет обработки флагов и переменных окружения
+// Package agentconfigs - Пакет обработки флагов и переменных окружения
 package agentconfigs
 
 import (
@@ -15,21 +15,24 @@ type AgentData struct {
 	Addr      string
 	HashKey   string
 	RateLimit int
+	CryptoKey string
 }
 
 var agentFlags struct {
 	pollinterval   int
 	reportInterval int
+	rateLimit      int
 	flagAddr       string
 	hashKey        string
-	rateLimit      int
+	cryptoKey      string
 }
 
 type AgentENV struct {
 	Address   string `env:"ADDRESS"`
+	Key       string `env:"KEY"`
+	CryptoKey string `env:"CRYPTO_KEY"`
 	PollInt   int    `env:"POLL_INTERVAL"`
 	RepInt    int    `env:"REPORT_INTERVAL"`
-	Key       string `env:"KEY"`
 	RateLimit int    `env:"RATE_LIMIT"`
 }
 
@@ -38,6 +41,7 @@ func parseFlags() *AgentData {
 	var flagData AgentData
 	flag.StringVar(&agentFlags.flagAddr, "a", "localhost:8080", "address and port to run server")
 	flag.StringVar(&agentFlags.hashKey, "k", "", "key to hash sha")
+	flag.StringVar(&agentFlags.cryptoKey, "crypto-key", "", "key to file with public key")
 	flag.IntVar(&agentFlags.pollinterval, "p", 2, "PollInterval")
 	flag.IntVar(&agentFlags.reportInterval, "r", 10, "ReportInterval")
 	flag.IntVar(&agentFlags.rateLimit, "l", 1, "amount of requests sended at one time")
@@ -65,6 +69,9 @@ func SetValues() *AgentData {
 		flagData.Addr = envcfg.Address
 	}
 
+	if envcfg.CryptoKey != "" {
+		flagData.CryptoKey = envcfg.CryptoKey
+	}
 	if int(envcfg.PollInt) > 0 {
 		flagData.Pollint = time.Duration(envcfg.PollInt)
 	}

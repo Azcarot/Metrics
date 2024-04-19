@@ -106,7 +106,9 @@ func (st *StorageHandler) HandleMultipleJSONPostMetrics(flag storage.Flags) http
 			res.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		if err = json.Unmarshal(buf.Bytes(), &metrics); err != nil {
+		data := buf.Bytes()
+
+		if err = json.Unmarshal(data, &metrics); err != nil {
 			res.WriteHeader(http.StatusBadRequest)
 			return
 		}
