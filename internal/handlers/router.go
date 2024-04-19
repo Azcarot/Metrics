@@ -1,4 +1,4 @@
-// Пакет содержит в себе роутер и все обработчики входящих запросов
+// Package handlers содержит в себе роутер и все обработчики входящих запросов
 package handlers
 
 import (
@@ -56,7 +56,9 @@ func MakeRouter(flag storage.Flags) *chi.Mux {
 	attachPprof(r)
 	r.Route("/", func(r chi.Router) {
 		r.Get("/", Storagehandler.HandleGetAllMetrics().ServeHTTP)
-		r.Get("/ping", storage.ST.CheckDBConnection().ServeHTTP)
+		if flag.FlagDBAddr != "" {
+			r.Get("/ping", storage.ST.CheckDBConnection().ServeHTTP)
+		}
 		r.Post("/update/", Storagehandler.HandleJSONPostMetrics(flag).ServeHTTP)
 		r.Post("/updates/", Storagehandler.HandleMultipleJSONPostMetrics(flag).ServeHTTP)
 		r.Post("/value/", Storagehandler.HandleJSONGetMetrics(flag).ServeHTTP)

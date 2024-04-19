@@ -3,6 +3,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -13,8 +14,14 @@ import (
 	"github.com/Azcarot/Metrics/internal/storage"
 )
 
-func main() {
+var (
+	buildVersion = "N/A"
+	buildDate    = "N/A"
+	buildCommit  = "N/A"
+)
 
+func main() {
+	fmt.Printf("Build version=%s\nBuild date =%s\nBuild commit =%s\n", buildVersion, buildDate, buildCommit)
 	flag := serverconfigs.ParseFlagsAndENV()
 	if flag.FlagDBAddr != "" {
 		err := storage.NewConn(flag)

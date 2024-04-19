@@ -93,3 +93,25 @@ func TestSQLStore_BatchWriteToPstgrs(t *testing.T) {
 		})
 	}
 }
+
+func TestNewConn(t *testing.T) {
+	type args struct {
+		f Flags
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{name: "normal data",
+			args: args{f: Flags{FlagDBAddr: "host='localhost' user='postgres' password='12345' sslmode=disable"}}, wantErr: false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := NewConn(tt.args.f); (err != nil) != tt.wantErr {
+				t.Errorf("NewConn() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
