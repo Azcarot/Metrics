@@ -32,6 +32,7 @@ func main() {
 	sleeptime := time.Duration(agentflagData.Pollint) * time.Second
 	reporttime := time.Duration(agentflagData.Reportint) * time.Second
 	reporttimer := time.After(reporttime)
+	go handlers.GetAgentSignal(workerData, metric, agentflagData)
 	for {
 		select {
 		case <-reporttimer:
@@ -63,4 +64,5 @@ func main() {
 			time.Sleep(sleeptime)
 		}
 	}
+
 }
