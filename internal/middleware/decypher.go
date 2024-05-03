@@ -28,6 +28,7 @@ func Decypher(flag storage.Flags) func(http.Handler) http.Handler {
 			buff, err := serverconfigs.DecypherData(serverconfigs.PrivateKey, buff)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
 			}
 			bodycopy := io.NopCloser(bytes.NewBuffer(buff))
 			r.Body.Close()

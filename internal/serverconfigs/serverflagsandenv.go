@@ -8,7 +8,6 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"flag"
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -44,7 +43,6 @@ func ParseFlagsAndENV() storage.Flags {
 		}
 		isFlagSet := make(map[string]bool)
 		fileData, err := parseFile(Flag.FlagConfig)
-		fmt.Println(fileData)
 		if err != nil {
 			log.Fatal(err)
 		}

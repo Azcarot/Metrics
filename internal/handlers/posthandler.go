@@ -37,7 +37,9 @@ func AgentWorkers(data WorkerData) {
 		}
 		for i, buf := range data.Body {
 			data.Body[i], err = agentconfigs.CypherData(encryptionKey, buf)
-			log.Fatal(err)
+			if err != nil {
+				log.Fatal(err)
+			}
 		}
 	}
 	err = PostJSONMetrics(data.BodyJSON, data.Batchrout, data.AgentflagData)
