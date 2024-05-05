@@ -52,7 +52,7 @@ func MakeRouter(flag storage.Flags) *chi.Mux {
 	middleware.Sugar = *logger.Sugar()
 	r := chi.NewRouter()
 
-	r.Use(middleware.WithLogging, middleware.GetCheck(flag), middleware.GzipHandler)
+	r.Use(middleware.WithLogging, middleware.GetCheck(flag), middleware.Decypher(flag), middleware.GzipHandler)
 	attachPprof(r)
 	r.Route("/", func(r chi.Router) {
 		r.Get("/", Storagehandler.HandleGetAllMetrics().ServeHTTP)

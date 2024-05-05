@@ -27,11 +27,13 @@ func main() {
 	metric.Countermem = make(map[string]storage.Counter)
 	var workerData handlers.WorkerData
 
+	shutdown := make(chan bool)
 	workerData.Batchrout = agentflagData.Addr + "/updates/"
 	workerData.Singlerout = agentflagData.Addr + "/update/"
 	sleeptime := time.Duration(agentflagData.Pollint) * time.Second
 	reporttime := time.Duration(agentflagData.Reportint) * time.Second
 	reporttimer := time.After(reporttime)
+	go handlers.GetAgentSignal(workerData, metric, shutdown, agentflagData)
 	for {
 		select {
 		case <-reporttimer:
@@ -42,6 +44,8 @@ func main() {
 				go handlers.AgentWorkers(workerData)
 			}
 			reporttimer = time.After(reporttime)
+		case <-shutdown:
+			return
 		default:
 			metrics := make(chan storage.MemStorage)
 			additionalMetrics := make(chan storage.MemStorage)
@@ -63,4 +67,5 @@ func main() {
 			time.Sleep(sleeptime)
 		}
 	}
+
 }

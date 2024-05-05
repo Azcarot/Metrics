@@ -49,6 +49,9 @@ func TestNewProducer(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			if _, err := os.Stat(tt.args.fileName); err == nil {
+				os.Remove(tt.args.fileName)
+			}
 			got, err := NewProducer(tt.args.fileName)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewProducer() error = %v, wantErr %v", err, tt.wantErr)

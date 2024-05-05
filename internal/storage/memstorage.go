@@ -33,16 +33,20 @@ type Flags struct {
 	FlagRestore       bool
 	FlagDBAddr        string
 	FlagKey           string
+	FlagCrypto        string
+	FlagConfig        string
 }
 
 // ServerENV - Переменные окружения
 type ServerENV struct {
-	Address       string `env:"ADDRESS"`
-	StoreInterval string `env:"STORE_INTERVAL"`
-	FileStorage   string `env:"FILE_STORAGE_PATH"`
-	Restore       bool   `env:"RESTORE"`
-	DBAddress     string `env:"DATABASE_DSN"`
-	Key           string `env:"KEY"`
+	Address       string `json:"address" env:"ADDRESS"`
+	StoreInterval string `json:"store_interval" env:"STORE_INTERVAL"`
+	FileStorage   string `json:"store_file" env:"FILE_STORAGE_PATH"`
+	Restore       bool   `json:"restore" env:"RESTORE"`
+	DBAddress     string `json:"database_dsn" env:"DATABASE_DSN"`
+	Key           string `json:"key" env:"KEY"`
+	CryptoKey     string `json:"crypto_key" env:"CRYPTO_KEY"`
+	ConfigPath    string `env:"CONFIG"`
 }
 
 type AllowedMetrics struct {

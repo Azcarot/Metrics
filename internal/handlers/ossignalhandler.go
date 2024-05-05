@@ -12,7 +12,7 @@ import (
 
 func (st *StorageHandler) ShutdownSave(s *http.Server, flag storage.Flags) {
 	terminateSignals := make(chan os.Signal, 1)
-	signal.Notify(terminateSignals, syscall.SIGINT, syscall.SIGTERM) //NOTE:: syscall.SIGKILL we cannot catch kill -9 as its force kill signal.
+	signal.Notify(terminateSignals, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT) //NOTE:: syscall.SIGKILL we cannot catch kill -9 as its force kill signal.
 
 	_, ok := <-terminateSignals
 	if ok && len(flag.FlagFileStorage) != 0 {
