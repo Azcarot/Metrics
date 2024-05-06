@@ -30,6 +30,7 @@ func ParseFlagsAndENV() storage.Flags {
 	flag.StringVar(&Flag.FlagKey, "k", "", "Hash key")
 	flag.StringVar(&Flag.FlagCrypto, "crypto-key", "", "path to private key")
 	flag.StringVar(&Flag.FlagConfig, "config", "", "path to server config file")
+	flag.StringVar(&Flag.FlagConfig, "t", "", "CIDR for trusted subnet")
 	flag.Parse()
 	var envcfg storage.ServerENV
 	err := env.Parse(&envcfg)
@@ -60,6 +61,12 @@ func ParseFlagsAndENV() storage.Flags {
 			fileFlag.FlagDBAddr = Flag.FlagDBAddr
 			if envcfg.DBAddress != "" {
 				fileFlag.FlagDBAddr = envcfg.DBAddress
+			}
+		}
+		if len(fileFlag.FlagSubnet) == 0 || isFlagSet["t"] {
+			fileFlag.FlagSubnet = Flag.FlagSubnet
+			if envcfg.TrustedSubnet != "" {
+				fileFlag.FlagSubnet = envcfg.TrustedSubnet
 			}
 		}
 		if len(fileFlag.FlagFileStorage) == 0 || isFlagSet["f"] {

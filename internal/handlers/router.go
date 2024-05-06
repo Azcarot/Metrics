@@ -59,10 +59,10 @@ func MakeRouter(flag storage.Flags) *chi.Mux {
 		if flag.FlagDBAddr != "" {
 			r.Get("/ping", storage.ST.CheckDBConnection().ServeHTTP)
 		}
-		r.Post("/update/", Storagehandler.HandleJSONPostMetrics(flag).ServeHTTP)
-		r.Post("/updates/", Storagehandler.HandleMultipleJSONPostMetrics(flag).ServeHTTP)
+		r.With(middleware.CheckIP(flag)).Post("/update/", Storagehandler.HandleJSONPostMetrics(flag).ServeHTTP)
+		r.With(middleware.CheckIP(flag)).Post("/updates/", Storagehandler.HandleMultipleJSONPostMetrics(flag).ServeHTTP)
 		r.Post("/value/", Storagehandler.HandleJSONGetMetrics(flag).ServeHTTP)
-		r.Post("/update/{type}/{name}/{value}", Storagehandler.HandlePostMetrics().ServeHTTP)
+		r.With(middleware.CheckIP(flag)).Post("/update/{type}/{name}/{value}", Storagehandler.HandlePostMetrics().ServeHTTP)
 		r.Get("/value/{name}/{type}", Storagehandler.HandleGetMetrics().ServeHTTP)
 	})
 
