@@ -23,6 +23,7 @@ func Decypher(flag storage.Flags) func(http.Handler) http.Handler {
 				next.ServeHTTP(w, r)
 				return
 			}
+
 			// читаем тело запроса
 			buff, _ := io.ReadAll(r.Body)
 			buff, err := serverconfigs.DecypherData(serverconfigs.PrivateKey, buff)

@@ -83,6 +83,7 @@ func PostJSONMetrics(b []byte, a string, f agentconfigs.AgentData) error {
 		hashedMetrics = agentconfigs.MakeSHA(b, f.HashKey)
 		resp.Header.Add("HashSHA256", hashedMetrics)
 	}
+
 	if f.CryptoKey != "" {
 		resp.Header.Add("Crypto", "enabled")
 	}

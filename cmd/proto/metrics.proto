@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package metrics;
+
+option go_package = "metrics/proto";
+
+message Metric {
+  string id = 1;  // id метрики
+  string mtype = 2; // тип метрики
+  int64 delta = 3;
+  double value = 4; 
+}
+
+message UpdateMetricRequest {
+  Metric metric = 1;
+}
+
+message UpdateMetricResponse {
+  string error = 1; // ошибка
+  Metric metric = 2;
+}
+
+message UpdateMetricsRequest {
+  repeated Metric metrics = 1;
+}
+
+message UpdateMetricsResponse {
+  string error = 1;            
+}
+
+
+
+service Metrics {
+  rpc UpdateMetric(UpdateMetricRequest) returns (UpdateMetricResponse);
+  rpc UpdateMetrics(UpdateMetricsRequest) returns (UpdateMetricsResponse);
+}

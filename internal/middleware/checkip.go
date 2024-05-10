@@ -18,10 +18,6 @@ func CheckIP(flag storage.Flags) func(http.Handler) http.Handler {
 			}
 			agentIp := r.Header.Get("X-Real-IP")
 
-			if len(agentIp) == 0 {
-				next.ServeHTTP(w, r)
-				return
-			}
 			_, inet, err := net.ParseCIDR(flag.FlagSubnet)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
