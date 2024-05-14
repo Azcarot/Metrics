@@ -98,7 +98,8 @@ func SendGrpcMetrics(ctx context.Context, c pb.MetricsClient, workerdata handler
 	for _, m := range metrics {
 		resp, err := c.UpdateMetric(ctx, &pb.UpdateMetricRequest{Metric: m})
 		if err != nil {
-			log.Fatal(err)
+			log.Print("Ошибка обновление метрики по http2: ", err)
+			return
 		}
 		log := log.Default()
 		log.Print(resp)

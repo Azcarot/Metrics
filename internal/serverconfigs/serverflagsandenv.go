@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
 	"flag"
 	"io"
 	"log"
@@ -183,7 +184,11 @@ func GetPrivateKey(pth string) ([]byte, error) {
 
 func DecypherData(key []byte, data []byte) ([]byte, error) {
 	var x509Key *rsa.PrivateKey
-	x509Key, _ = x509.ParsePKCS1PrivateKey(key)
+	bkey, _ := pem.Decode(key)
+	x509Key, err := x509.ParsePKCS1PrivateKey(bkey.Bytes)
+	if err != nil {
+		return nil, err
+	}
 	msgLen := len(data)
 	step := x509Key.Size()
 	var decryptedBytes []byte

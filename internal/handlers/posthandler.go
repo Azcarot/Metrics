@@ -104,7 +104,7 @@ func GetOutboundIP(a string) net.IP {
 	split := regex.Split(a, -1)
 	conn, err := net.Dial("udp", split[0])
 	if err != nil {
-		log.Fatal(err)
+		return nil
 	}
 	defer conn.Close()
 

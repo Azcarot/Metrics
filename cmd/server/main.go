@@ -40,17 +40,16 @@ var Flags storage.Flags
 
 func main() {
 	fmt.Printf("Build version=%s\nBuild date =%s\nBuild commit =%s\n", buildVersion, buildDate, buildCommit)
-	flag := serverconfigs.ParseFlagsAndENV()
-	Flags = flag
-	if flag.FlagCrypto != "" {
+	Flags := serverconfigs.ParseFlagsAndENV()
+	if Flags.FlagCrypto != "" {
 		var err error
-		serverconfigs.PrivateKey, err = serverconfigs.GetPrivateKey(flag.FlagCrypto)
+		serverconfigs.PrivateKey, err = serverconfigs.GetPrivateKey(Flags.FlagCrypto)
 		if err != nil {
 			panic(err)
 		}
 	}
-	if flag.FlagDBAddr != "" {
-		err := storage.NewConn(flag)
+	if Flags.FlagDBAddr != "" {
+		err := storage.NewConn(Flags)
 		if err != nil {
 			panic(err)
 		}
@@ -58,12 +57,8 @@ func main() {
 		storage.ST.CreateTablesForMetrics()
 		defer storage.DB.Close(context.Background())
 	}
-	r := handlers.MakeRouter(flag)
-	// server := &http.Server{
-	// 	Addr:    flag.FlagAddr,
-	// 	Handler: r,
-	// }
-	l, err := net.Listen("tcp", flag.FlagAddr)
+	r := handlers.MakeRouter(Flags)
+	l, err := net.Listen("tcp", Flags.FlagAddr)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -88,23 +83,20 @@ func main() {
 	// Use the muxed listeners for your servers.
 	go grpcS.Serve(grpcL)
 	go httpS.Serve(httpL)
-	go handlers.GetSignal(httpS, flag)
+	go handlers.GetSignal(httpS, Flags)
 	//Сервер для pprof
 	go func() {
 		log.Println(http.ListenAndServe(":6060", nil))
 	}()
-	// Start serving!
-	m.Serve()
 
-	// server.ListenAndServe()
+	m.Serve()
 
 }
 
 // UpdateMetric реализует интерфейс добавления метрики.
 func (s *MetricsServer) UpdateMetric(ctx context.Context, in *pb.UpdateMetricRequest) (*pb.UpdateMetricResponse, error) {
 	var response pb.UpdateMetricResponse
-	flag := Flags
-	if in.Metric.Mtype == storage.GuageType {
+	if in.Metric.Mtype == pb.Mtype_MTYPE_DELTA {
 		if value, ok := s.metrics.LoadOrStore(in.Metric.Id, in.Metric.Delta); ok {
 			newDelta, ok := value.(int64)
 			if ok {
@@ -113,14 +105,14 @@ func (s *MetricsServer) UpdateMetric(ctx context.Context, in *pb.UpdateMetricReq
 				if _, ok := s.metrics.Load(in.Metric.Id); ok {
 					response.Metric = in.Metric
 				} else {
-					response.Error = fmt.Sprintf("Не удалось сохранить метрику %s ", in.Metric.Id)
+					return &response, fmt.Errorf("не удалось обновить Delta метрику %s", in.Metric.Id)
 				}
 			}
 		} else {
 			if _, ok := s.metrics.Load(in.Metric.Id); ok {
 				response.Metric = in.Metric
 			} else {
-				response.Error = fmt.Sprintf("Не удалось сохранить метрику %s ", in.Metric.Id)
+				return &response, fmt.Errorf("не удалось сохранить Delta метрику %s", in.Metric.Id)
 			}
 		}
 	} else {
@@ -128,7 +120,7 @@ func (s *MetricsServer) UpdateMetric(ctx context.Context, in *pb.UpdateMetricReq
 		if _, ok := s.metrics.Load(in.Metric.Id); ok {
 			response.Metric = in.Metric
 		} else {
-			response.Error = fmt.Sprintf("Не удалось сохранить метрику %s отсутствует", in.Metric.Id)
+			return &response, fmt.Errorf("не удалось сохранить Gauge метрику %s", in.Metric.Id)
 		}
 
 	}
@@ -136,14 +128,15 @@ func (s *MetricsServer) UpdateMetric(ctx context.Context, in *pb.UpdateMetricReq
 	err := mapstructure.Decode(in.Metric, &metricData)
 
 	if err != nil {
-		response.Error = fmt.Sprintf("Не правильный формат метрики %s", in.Metric.Id)
+		fmt.Println(in.Metric)
+		return &response, fmt.Errorf("не правильный формат метрики %s", in.Metric.Id)
 	}
-	if len(flag.FlagDBAddr) != 0 {
+	if len(Flags.FlagDBAddr) != 0 {
 		storage.PgxStorage.WriteMetricsToPstgrs(storage.ST, metricData)
 	}
 
-	if len(flag.FlagFileStorage) != 0 && flag.FlagStoreInterval == 0 {
-		fileName := flag.FlagFileStorage
+	if len(Flags.FlagFileStorage) != 0 && Flags.FlagStoreInterval == 0 {
+		fileName := Flags.FlagFileStorage
 		storage.WriteToFile(fileName, metricData)
 	}
 	return &response, nil

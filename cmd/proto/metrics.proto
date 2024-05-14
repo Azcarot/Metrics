@@ -4,9 +4,15 @@ package metrics;
 
 option go_package = "metrics/proto";
 
+enum Mtype {
+  MTYPE_UNSPECIFIED = 0;
+  MTYPE_GAUGE = 1;
+  MTYPE_DELTA = 2;
+}
+
 message Metric {
   string id = 1;  // id метрики
-  string mtype = 2; // тип метрики
+  Mtype mtype = 2; // тип метрики
   int64 delta = 3;
   double value = 4; 
 }
@@ -16,21 +22,12 @@ message UpdateMetricRequest {
 }
 
 message UpdateMetricResponse {
-  string error = 1; // ошибка
-  Metric metric = 2;
+  Metric metric = 1;
 }
 
-message UpdateMetricsRequest {
-  repeated Metric metrics = 1;
-}
-
-message UpdateMetricsResponse {
-  string error = 1;            
-}
 
 
 
 service Metrics {
   rpc UpdateMetric(UpdateMetricRequest) returns (UpdateMetricResponse);
-  rpc UpdateMetrics(UpdateMetricsRequest) returns (UpdateMetricsResponse);
 }
