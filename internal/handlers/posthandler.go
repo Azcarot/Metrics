@@ -3,7 +3,9 @@ package handlers
 import (
 	"bytes"
 	"log"
+	"net"
 	"net/http"
+	"regexp"
 	"time"
 
 	"github.com/Azcarot/Metrics/internal/agentconfigs"
@@ -68,6 +70,7 @@ func PostJSONMetrics(b []byte, a string, f agentconfigs.AgentData) error {
 	pth := "http://" + a
 	var hashedMetrics string
 	var err error
+	ip := GetOutboundIP(a)
 	b, err = agentconfigs.GzipForAgent(b)
 	if err != nil {
 		return err
@@ -76,16 +79,17 @@ func PostJSONMetrics(b []byte, a string, f agentconfigs.AgentData) error {
 	if err != nil {
 		return err
 	}
-
 	if len(f.HashKey) > 0 {
 		hashedMetrics = agentconfigs.MakeSHA(b, f.HashKey)
 		resp.Header.Add("HashSHA256", hashedMetrics)
 	}
+
 	if f.CryptoKey != "" {
 		resp.Header.Add("Crypto", "enabled")
 	}
 	resp.Header.Add("Content-Type", storage.JSONContentType)
 	resp.Header.Add("Content-Encoding", "gzip")
+	resp.Header.Add("X-Real-IP", ip.String())
 	client := &http.Client{}
 	res, err := client.Do(resp)
 	if err != nil {
@@ -93,4 +97,18 @@ func PostJSONMetrics(b []byte, a string, f agentconfigs.AgentData) error {
 	}
 	defer res.Body.Close()
 	return err
+}
+
+func GetOutboundIP(a string) net.IP {
+	regex := regexp.MustCompile("/")
+	split := regex.Split(a, -1)
+	conn, err := net.Dial("udp", split[0])
+	if err != nil {
+		return nil
+	}
+	defer conn.Close()
+
+	localAddr := conn.LocalAddr().(*net.UDPAddr)
+
+	return localAddr.IP
 }

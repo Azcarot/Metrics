@@ -7,6 +7,8 @@ import (
 	"math/rand"
 	"os"
 	"testing"
+
+	"github.com/jackc/pgx/v5"
 )
 
 func TestMain(m *testing.M) {
@@ -22,7 +24,11 @@ func TestMain(m *testing.M) {
 func run(m *testing.M) (code int, err error) {
 	var f Flags
 	f.FlagDBAddr = "host='localhost' user='postgres' password='12345' sslmode=disable"
-	connectToDB(f)
+	DB, err = pgx.Connect(context.Background(), f.FlagDBAddr)
+	if err != nil {
+		//handle the error
+		log.Fatal(err)
+	}
 	ST = MakeStore(DB)
 	dbName := "testdb"
 	ctx := context.Background()

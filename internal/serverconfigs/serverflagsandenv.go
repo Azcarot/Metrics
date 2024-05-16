@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
 	"flag"
 	"io"
 	"log"
@@ -30,6 +31,7 @@ func ParseFlagsAndENV() storage.Flags {
 	flag.StringVar(&Flag.FlagKey, "k", "", "Hash key")
 	flag.StringVar(&Flag.FlagCrypto, "crypto-key", "", "path to private key")
 	flag.StringVar(&Flag.FlagConfig, "config", "", "path to server config file")
+	flag.StringVar(&Flag.FlagSubnet, "t", "", "CIDR for trusted subnet")
 	flag.Parse()
 	var envcfg storage.ServerENV
 	err := env.Parse(&envcfg)
@@ -60,6 +62,12 @@ func ParseFlagsAndENV() storage.Flags {
 			fileFlag.FlagDBAddr = Flag.FlagDBAddr
 			if envcfg.DBAddress != "" {
 				fileFlag.FlagDBAddr = envcfg.DBAddress
+			}
+		}
+		if len(fileFlag.FlagSubnet) == 0 || isFlagSet["t"] {
+			fileFlag.FlagSubnet = Flag.FlagSubnet
+			if envcfg.TrustedSubnet != "" {
+				fileFlag.FlagSubnet = envcfg.TrustedSubnet
 			}
 		}
 		if len(fileFlag.FlagFileStorage) == 0 || isFlagSet["f"] {
@@ -176,13 +184,34 @@ func GetPrivateKey(pth string) ([]byte, error) {
 
 func DecypherData(key []byte, data []byte) ([]byte, error) {
 	var x509Key *rsa.PrivateKey
-	x509Key, _ = x509.ParsePKCS1PrivateKey(key)
-	dencryptedData, err := rsa.DecryptOAEP(
-		sha256.New(),
-		rand.Reader,
-		x509Key,
-		data,
-		nil,
-	)
-	return dencryptedData, err
+	bkey, _ := pem.Decode(key)
+	x509Key, err := x509.ParsePKCS1PrivateKey(bkey.Bytes)
+	if err != nil {
+		return nil, err
+	}
+	msgLen := len(data)
+	step := x509Key.Size()
+	var decryptedBytes []byte
+
+	for start := 0; start < msgLen; start += step {
+		finish := start + step
+		if finish > msgLen {
+			finish = msgLen
+		}
+
+		decryptedData, err := rsa.DecryptOAEP(
+			sha256.New(),
+			rand.Reader,
+			x509Key,
+			data[start:finish],
+			nil,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		decryptedBytes = append(decryptedBytes, decryptedData...)
+	}
+
+	return decryptedBytes, nil
 }

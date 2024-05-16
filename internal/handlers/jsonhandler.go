@@ -16,7 +16,6 @@ import (
 func (st *StorageHandler) HandleJSONPostMetrics(flag storage.Flags) http.Handler {
 	var metricData storage.Metrics
 	var metricResult storage.Metrics
-
 	postMetric := func(res http.ResponseWriter, req *http.Request) {
 		var buf bytes.Buffer
 		// читаем тело запроса

@@ -85,7 +85,9 @@ func parseFlags() *AgentData {
 				flagData.HashKey = envcfg.Key
 			}
 		}
+
 		if len(flagData.CryptoKey) == 0 || isFlagSet["crypto-key"] {
+
 			flagData.CryptoKey = agentFlags.cryptoKey
 			if envcfg.CryptoKey != "" {
 				flagData.CryptoKey = envcfg.CryptoKey

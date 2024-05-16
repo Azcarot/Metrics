@@ -35,6 +35,7 @@ type Flags struct {
 	FlagKey           string
 	FlagCrypto        string
 	FlagConfig        string
+	FlagSubnet        string
 }
 
 // ServerENV - Переменные окружения
@@ -47,6 +48,7 @@ type ServerENV struct {
 	Key           string `json:"key" env:"KEY"`
 	CryptoKey     string `json:"crypto_key" env:"CRYPTO_KEY"`
 	ConfigPath    string `env:"CONFIG"`
+	TrustedSubnet string `json:"trusted_subnet" env:"TRUSTED_SUBNET"`
 }
 
 type AllowedMetrics struct {

@@ -66,7 +66,7 @@ func TestAgentWorkers(t *testing.T) {
 		args args
 	}{{name: "Просто для покрытия",
 		args: args{
-			data: WorkerData{},
+			data: WorkerData{Batchrout: "localhost:8080"},
 		}},
 	}
 	for _, tt := range tests {
