@@ -10,9 +10,13 @@ import (
 )
 
 func CheckIP(flag storage.Flags) func(http.Handler) http.Handler {
-	_, inet, err := net.ParseCIDR(flag.FlagSubnet)
-	if err != nil {
-		return nil
+	var inet *net.IPNet
+	var err error
+	if flag.FlagSubnet != "" {
+		_, inet, err = net.ParseCIDR(flag.FlagSubnet)
+		if err != nil {
+			return nil
+		}
 	}
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
